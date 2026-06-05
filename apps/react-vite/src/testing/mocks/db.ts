@@ -94,6 +94,14 @@ export const initializeDb = async () => {
       });
     }
   });
+
+  if (process.env.NODE_ENV !== 'test') {
+    const { env } = await import('@/config/env');
+    if (env.ENABLE_DEMO_SEEDING) {
+      const { seedDemoData } = await import('./seed-db');
+      await seedDemoData();
+    }
+  }
 };
 
 export const resetDb = () => {
