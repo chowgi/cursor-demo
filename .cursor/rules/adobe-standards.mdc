@@ -1,0 +1,46 @@
+---
+description: "Adobe Engineering Standards"
+globs:
+  - "**/*.py"
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.sql"
+alwaysApply: true
+---
+
+# Adobe Engineering Standards
+
+These standards are mandatory across all Adobe engineering codebases. They are a specification, not a set of recommendations. Code that violates these directives must not be merged. When generating, editing, or reviewing code in this repository, enforce every applicable rule below without being asked.
+
+## Python / FastAPI / SQLModel
+
+- Every API endpoint MUST include an OpenAPI-compatible docstring containing both a `summary` and a `description`. Endpoints without complete documentation are non-conformant.
+- Every new SQLModel model field MUST be accompanied by an Alembic migration in the same change. NEVER modify the database schema without a corresponding migration.
+- Python type hints are MANDATORY on all function signatures, including parameters and return types. Bare `dict`, `Any`, or untyped returns are prohibited. Use precise, fully parameterized types.
+- All Pydantic response models MUST mirror their SQLModel field names exactly. Ad-hoc schema drift between persistence and response models is forbidden.
+- Use `Optional[X]` for nullable fields. Do NOT use the `X | None` syntax — Python 3.10 compatibility is required.
+
+## TypeScript / React
+
+- All React components MUST use an explicitly defined TypeScript `interface` for their props. Inline type literals and `any` are prohibited.
+- Component files MUST be co-located with their types in the same directory.
+- Direct DOM mutation is forbidden. Use React state and refs exclusively to manage and reference the DOM.
+- All async functions MUST handle errors explicitly. Unhandled promise rejections are not permitted; every `await` and promise chain must have defined error handling.
+
+## Accessibility (Adobe Mandatory)
+
+- Every interactive element MUST have an `aria-label` or `aria-labelledby` attribute.
+- Any colour-coded UI element MUST include a non-colour indicator — an icon, text label, or pattern. Colour alone is never an acceptable signal.
+- Keyboard navigation MUST be fully supported for every interactive component. Mouse-only interactions are prohibited.
+
+## Testing
+
+- Every new model field or API endpoint MUST have a corresponding Pytest test.
+- Backend test files MUST be placed in `backend/app/tests/` and follow the naming pattern `test_<module>.py`.
+- Frontend component tests MUST be placed in a `__tests__/` directory adjacent to the component under test.
+
+## General
+
+- No hardcoded strings for user-facing copy. Use constants or i18n keys for all text presented to users.
+- No `console.log` or `print` statements in committed code. Remove all debug output before merge.
+- All environment-specific configuration MUST come from environment variables. Hardcoding configuration values is prohibited.
