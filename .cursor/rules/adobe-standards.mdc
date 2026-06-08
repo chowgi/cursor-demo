@@ -1,0 +1,38 @@
+---
+description: "Adobe Engineering Standards"
+globs: **/*.py, **/*.ts, **/*.tsx
+alwaysApply: true
+---
+
+# Adobe Engineering Standards
+
+Enterprise engineering governance for this team. Follow these directives on every change.
+
+## Python / FastAPI / SQLModel
+
+- All API endpoints must include OpenAPI-compatible docstrings with `summary` and `description` fields.
+- All new SQLModel model fields require an accompanying Alembic migration — never modify DB schema without one.
+- Python type hints are mandatory on all function signatures — no bare `dict`, `Any`, or untyped returns.
+- Use `Optional[X]` not `X | None` for nullable fields (Python 3.10 compatibility).
+
+## TypeScript / React
+
+- All React components must use explicitly defined TypeScript interfaces for props — no inline type literals, no `any`.
+- Component files must be co-located with their types in the same directory.
+- All async functions must handle errors explicitly — no unhandled promise rejections.
+
+## Accessibility (mandatory)
+
+- All interactive elements must have an `aria-label` or `aria-labelledby` attribute.
+- Colour-coded UI elements must include a non-colour indicator (icon, label, or pattern).
+- Keyboard navigation must be supported for all interactive components.
+
+## Testing
+
+- Every new model field or API endpoint must have a corresponding test.
+- Frontend component tests go in `__tests__/` adjacent to the component.
+
+## General
+
+- No `console.log` or `print` statements in committed code.
+- All environment-specific config must come from environment variables, never hardcoded.
