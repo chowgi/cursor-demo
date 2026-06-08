@@ -23,6 +23,7 @@ const models = {
     id: primaryKey(nanoid),
     title: String,
     body: String,
+    priority: String,
     authorId: String,
     teamId: String,
     createdAt: Date.now,

@@ -5,6 +5,8 @@ import { formatDate } from '@/utils/format';
 import { useDiscussion } from '../api/get-discussion';
 import { UpdateDiscussion } from '../components/update-discussion';
 
+import { PriorityBadge } from './priority-badge';
+
 export const DiscussionView = ({ discussionId }: { discussionId: string }) => {
   const discussionQuery = useDiscussion({
     discussionId,
@@ -32,6 +34,9 @@ export const DiscussionView = ({ discussionId }: { discussionId: string }) => {
           by {discussion.author.firstName} {discussion.author.lastName}
         </span>
       )}
+      <span className="ml-2">
+        <PriorityBadge priority={discussion.priority} />
+      </span>
       <div className="mt-6 flex flex-col space-y-16">
         <div className="flex justify-end">
           <UpdateDiscussion discussionId={discussionId} />

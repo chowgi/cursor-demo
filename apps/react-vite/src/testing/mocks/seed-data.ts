@@ -63,6 +63,7 @@ export const demoDiscussions = [
     body: 'We should streamline the first-week experience for new teammates. Ideas: a welcome checklist, team glossary, and a short intro discussion thread.',
     authorId: 'demo-user-admin',
     teamId: DEMO_TEAM_ID,
+    priority: 'MEDIUM',
     createdAt: BASE_TIMESTAMP + 10_000,
   },
   {
@@ -71,6 +72,7 @@ export const demoDiscussions = [
     body: 'The updated dashboard layout adds stat cards and recent activity. Please share feedback on information hierarchy before we ship.',
     authorId: 'demo-user-jane',
     teamId: DEMO_TEAM_ID,
+    priority: 'HIGH',
     createdAt: BASE_TIMESTAMP + 20_000,
   },
   {
@@ -79,6 +81,7 @@ export const demoDiscussions = [
     body: 'Proposal: version public endpoints under /v1 and document breaking changes in release notes. Open question: do we need sunset headers?',
     authorId: 'demo-user-alex',
     teamId: DEMO_TEAM_ID,
+    priority: 'URGENT',
     createdAt: BASE_TIMESTAMP + 30_000,
   },
   {
@@ -87,6 +90,7 @@ export const demoDiscussions = [
     body: 'Before release: run smoke tests, verify role permissions, confirm discussion pagination, and validate comment deletion flows.',
     authorId: 'demo-user-sam',
     teamId: DEMO_TEAM_ID,
+    priority: 'HIGH',
     createdAt: BASE_TIMESTAMP + 40_000,
   },
   {
@@ -95,6 +99,7 @@ export const demoDiscussions = [
     body: 'What went well: faster PR reviews and fewer flaky tests. What to improve: earlier design alignment and clearer acceptance criteria.',
     authorId: 'demo-user-admin',
     teamId: DEMO_TEAM_ID,
+    priority: 'LOW',
     createdAt: BASE_TIMESTAMP + 50_000,
   },
 ] as const;

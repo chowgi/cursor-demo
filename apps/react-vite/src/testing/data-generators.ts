@@ -44,6 +44,7 @@ const generateDiscussion = () => ({
   id: randUuid(),
   title: randCatchPhrase(),
   body: randParagraph(),
+  priority: 'LOW' as const,
   createdAt: Date.now(),
 });
 

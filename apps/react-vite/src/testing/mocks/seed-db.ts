@@ -9,6 +9,38 @@ import {
 } from './seed-data';
 import { hash } from './utils';
 
+const migrateDemoDiscussionPriorities = async () => {
+  let updated = false;
+
+  demoDiscussions.forEach((demoDiscussion) => {
+    const discussion = db.discussion.findFirst({
+      where: {
+        id: {
+          equals: demoDiscussion.id,
+        },
+      },
+    });
+
+    if (discussion && discussion.priority !== demoDiscussion.priority) {
+      db.discussion.update({
+        where: {
+          id: {
+            equals: demoDiscussion.id,
+          },
+        },
+        data: {
+          priority: demoDiscussion.priority,
+        },
+      });
+      updated = true;
+    }
+  });
+
+  if (updated) {
+    await persistDb('discussion');
+  }
+};
+
 export const isDemoSeedPresent = () =>
   db.team.findFirst({
     where: {
@@ -20,6 +52,7 @@ export const isDemoSeedPresent = () =>
 
 export const seedDemoData = async () => {
   if (isDemoSeedPresent()) {
+    await migrateDemoDiscussionPriorities();
     return;
   }
 

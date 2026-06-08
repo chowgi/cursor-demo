@@ -36,9 +36,12 @@ export type Team = Entity<{
   description: string;
 }>;
 
+export type DiscussionPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+
 export type Discussion = Entity<{
   title: string;
   body: string;
+  priority: DiscussionPriority;
   teamId: string;
   author: User;
 }>;

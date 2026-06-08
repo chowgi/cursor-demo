@@ -1,6 +1,8 @@
 import { HttpResponse, http } from 'msw';
 
 import { env } from '@/config/env';
+import { normalizeDiscussionPriority } from '@/features/discussions/constants/priority';
+import { DiscussionPriority } from '@/types/api';
 
 import { db, persistDb } from '../db';
 import {
@@ -13,6 +15,7 @@ import {
 type DiscussionBody = {
   title: string;
   body: string;
+  priority?: DiscussionPriority;
 };
 
 export const discussionsHandlers = [
@@ -59,6 +62,7 @@ export const discussionsHandlers = [
           });
           return {
             ...discussion,
+            priority: normalizeDiscussionPriority(discussion.priority),
             author: author ? sanitizeUser(author) : {},
           };
         });
@@ -117,6 +121,7 @@ export const discussionsHandlers = [
 
         const result = {
           ...discussion,
+          priority: normalizeDiscussionPriority(discussion.priority),
           author: author ? sanitizeUser(author) : {},
         };
 
@@ -144,6 +149,7 @@ export const discussionsHandlers = [
         teamId: user?.teamId,
         authorId: user?.id,
         ...data,
+        priority: data.priority ?? 'LOW',
       });
       await persistDb('discussion');
       return HttpResponse.json(result);

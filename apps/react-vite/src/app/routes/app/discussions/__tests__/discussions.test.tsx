@@ -55,7 +55,7 @@ test(
     const row = await screen.findByRole(
       'row',
       {
-        name: `${newDiscussion.title} ${formatDate(newDiscussion.createdAt)} View Delete Discussion`,
+        name: `${newDiscussion.title} ${formatDate(newDiscussion.createdAt)} Low View Delete Discussion`,
       },
       { timeout: 5000 },
     );

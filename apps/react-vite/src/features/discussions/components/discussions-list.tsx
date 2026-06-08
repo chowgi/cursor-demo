@@ -11,6 +11,7 @@ import { getDiscussionQueryOptions } from '../api/get-discussion';
 import { useDiscussions } from '../api/get-discussions';
 
 import { DeleteDiscussion } from './delete-discussion';
+import { PriorityBadge } from './priority-badge';
 
 export type DiscussionsListProps = {
   onDiscussionPrefetch?: (id: string) => void;
@@ -52,6 +53,13 @@ export const DiscussionsList = ({
           field: 'createdAt',
           Cell({ entry: { createdAt } }) {
             return <span>{formatDate(createdAt)}</span>;
+          },
+        },
+        {
+          title: 'Priority',
+          field: 'priority',
+          Cell({ entry: { priority } }) {
+            return <PriorityBadge priority={priority} />;
           },
         },
         {
