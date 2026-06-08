@@ -1,6 +1,11 @@
 import { HttpResponse, http } from 'msw';
 
 import { env } from '@/config/env';
+import {
+  DEFAULT_DISCUSSION_PRIORITY,
+  DiscussionPriority,
+  normalizeDiscussionPriority,
+} from '@/features/discussions/types/discussion-priority';
 
 import { db, persistDb } from '../db';
 import {
@@ -13,6 +18,7 @@ import {
 type DiscussionBody = {
   title: string;
   body: string;
+  priority?: DiscussionPriority;
 };
 
 export const discussionsHandlers = [
@@ -59,6 +65,7 @@ export const discussionsHandlers = [
           });
           return {
             ...discussion,
+            priority: normalizeDiscussionPriority(discussion.priority),
             author: author ? sanitizeUser(author) : {},
           };
         });
@@ -117,6 +124,7 @@ export const discussionsHandlers = [
 
         const result = {
           ...discussion,
+          priority: normalizeDiscussionPriority(discussion.priority),
           author: author ? sanitizeUser(author) : {},
         };
 
@@ -144,6 +152,7 @@ export const discussionsHandlers = [
         teamId: user?.teamId,
         authorId: user?.id,
         ...data,
+        priority: data.priority ?? DEFAULT_DISCUSSION_PRIORITY,
       });
       await persistDb('discussion');
       return HttpResponse.json(result);
@@ -168,6 +177,13 @@ export const discussionsHandlers = [
         const data = (await request.json()) as DiscussionBody;
         const discussionId = params.discussionId as string;
         requireAdmin(user);
+        const updateData: DiscussionBody = {
+          title: data.title,
+          body: data.body,
+        };
+        if (data.priority !== undefined) {
+          updateData.priority = data.priority;
+        }
         const result = db.discussion.update({
           where: {
             teamId: {
@@ -177,7 +193,7 @@ export const discussionsHandlers = [
               equals: discussionId,
             },
           },
-          data,
+          data: updateData,
         });
         await persistDb('discussion');
         return HttpResponse.json(result);

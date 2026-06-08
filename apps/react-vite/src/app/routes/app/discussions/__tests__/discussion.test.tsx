@@ -29,8 +29,9 @@ const renderDiscussion = async () => {
   };
 };
 
-test('should render discussion', async () => {
+test('should render discussion with priority badge', async () => {
   const { fakeDiscussion } = await renderDiscussion();
+  expect(screen.getByLabelText(/priority:/i)).toBeInTheDocument();
   expect(screen.getByText(fakeDiscussion.body)).toBeInTheDocument();
 });
 
@@ -50,6 +51,7 @@ test('should update discussion', async () => {
 
   const titleField = within(drawer).getByText(/title/i);
   const bodyField = within(drawer).getByText(/body/i);
+  const priorityField = within(drawer).getByLabelText(/priority/i);
 
   const newTitle = `${fakeDiscussion.title}${titleUpdate}`;
   const newBody = `${fakeDiscussion.body}${bodyUpdate}`;
@@ -59,6 +61,8 @@ test('should update discussion', async () => {
 
   // appending updated to the body
   await userEvent.type(bodyField, bodyUpdate);
+
+  await userEvent.selectOptions(priorityField, 'HIGH');
 
   const submitButton = within(drawer).getByRole('button', {
     name: /submit/i,
@@ -72,6 +76,7 @@ test('should update discussion', async () => {
     await screen.findByRole('heading', { name: newTitle }),
   ).toBeInTheDocument();
   expect(await screen.findByText(newBody)).toBeInTheDocument();
+  expect(screen.getByLabelText('Priority: High')).toBeInTheDocument();
 });
 
 test(

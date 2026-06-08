@@ -8,6 +8,8 @@ import {
   randCatchPhrase,
 } from '@ngneat/falso';
 
+import { DEFAULT_DISCUSSION_PRIORITY } from '@/features/discussions/types/discussion-priority';
+
 const generateUser = () => ({
   id: randUuid() + Math.random(),
   firstName: randUserName({ withAccents: false }),
@@ -44,6 +46,7 @@ const generateDiscussion = () => ({
   id: randUuid(),
   title: randCatchPhrase(),
   body: randParagraph(),
+  priority: DEFAULT_DISCUSSION_PRIORITY,
   createdAt: Date.now(),
 });
 

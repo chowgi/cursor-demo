@@ -11,6 +11,7 @@ import { getDiscussionQueryOptions } from '../api/get-discussion';
 import { useDiscussions } from '../api/get-discussions';
 
 import { DeleteDiscussion } from './delete-discussion';
+import { DiscussionPriorityBadge } from './discussion-priority-badge';
 
 export type DiscussionsListProps = {
   onDiscussionPrefetch?: (id: string) => void;
@@ -43,6 +44,13 @@ export const DiscussionsList = ({
     <Table
       data={discussions}
       columns={[
+        {
+          title: '',
+          field: 'priority',
+          Cell({ entry: { priority } }) {
+            return <DiscussionPriorityBadge priority={priority} />;
+          },
+        },
         {
           title: 'Title',
           field: 'title',

@@ -44,6 +44,9 @@ test(
     await userEvent.type(titleField, newDiscussion.title);
     await userEvent.type(bodyField, newDiscussion.body);
 
+    const priorityField = within(drawer).getByLabelText(/priority/i);
+    await userEvent.selectOptions(priorityField, 'HIGH');
+
     const submitButton = within(drawer).getByRole('button', {
       name: /submit/i,
     });
@@ -55,10 +58,14 @@ test(
     const row = await screen.findByRole(
       'row',
       {
-        name: `${newDiscussion.title} ${formatDate(newDiscussion.createdAt)} View Delete Discussion`,
+        name: `Priority: High ${newDiscussion.title} ${formatDate(newDiscussion.createdAt)} View Delete Discussion`,
       },
       { timeout: 5000 },
     );
+
+    expect(
+      within(row).getByLabelText('Priority: High'),
+    ).toBeInTheDocument();
 
     expect(
       within(row).getByRole('cell', {

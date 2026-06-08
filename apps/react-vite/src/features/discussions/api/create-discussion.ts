@@ -5,11 +5,14 @@ import { api } from '@/lib/api-client';
 import { MutationConfig } from '@/lib/react-query';
 import { Discussion } from '@/types/api';
 
+import { DISCUSSION_PRIORITIES } from '../types/discussion-priority';
+
 import { getDiscussionsQueryOptions } from './get-discussions';
 
 export const createDiscussionInputSchema = z.object({
   title: z.string().min(1, 'Required'),
   body: z.string().min(1, 'Required'),
+  priority: z.enum(DISCUSSION_PRIORITIES).optional(),
 });
 
 export type CreateDiscussionInput = z.infer<typeof createDiscussionInputSchema>;
