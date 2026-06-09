@@ -50,6 +50,9 @@ test('should update discussion', async () => {
 
   const titleField = within(drawer).getByText(/title/i);
   const bodyField = within(drawer).getByText(/body/i);
+  const priorityField = within(drawer).getByRole('combobox', {
+    name: /discussion priority/i,
+  });
 
   const newTitle = `${fakeDiscussion.title}${titleUpdate}`;
   const newBody = `${fakeDiscussion.body}${bodyUpdate}`;
@@ -59,6 +62,8 @@ test('should update discussion', async () => {
 
   // appending updated to the body
   await userEvent.type(bodyField, bodyUpdate);
+
+  await userEvent.selectOptions(priorityField, 'HIGH');
 
   const submitButton = within(drawer).getByRole('button', {
     name: /submit/i,
@@ -72,6 +77,18 @@ test('should update discussion', async () => {
     await screen.findByRole('heading', { name: newTitle }),
   ).toBeInTheDocument();
   expect(await screen.findByText(newBody)).toBeInTheDocument();
+
+  await userEvent.click(
+    screen.getByRole('button', { name: /update discussion/i }),
+  );
+
+  const updatedDrawer = await screen.findByRole('dialog', {
+    name: /update discussion/i,
+  });
+
+  expect(
+    within(updatedDrawer).getByRole('combobox', { name: /discussion priority/i }),
+  ).toHaveValue('HIGH');
 });
 
 test(

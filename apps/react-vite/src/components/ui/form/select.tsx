@@ -15,11 +15,19 @@ type SelectFieldProps = FieldWrapperPassThroughProps & {
   className?: string;
   defaultValue?: string;
   registration: Partial<UseFormRegisterReturn>;
+  'aria-label'?: string;
 };
 
 export const Select = (props: SelectFieldProps) => {
-  const { label, options, error, className, defaultValue, registration } =
-    props;
+  const {
+    label,
+    options,
+    error,
+    className,
+    defaultValue,
+    registration,
+    'aria-label': ariaLabel,
+  } = props;
   return (
     <FieldWrapper label={label} error={error}>
       <select
@@ -28,6 +36,7 @@ export const Select = (props: SelectFieldProps) => {
           className,
         )}
         defaultValue={defaultValue}
+        aria-label={ariaLabel ?? (typeof label === 'string' ? label : undefined)}
         {...registration}
       >
         {options.map(({ label, value }) => (

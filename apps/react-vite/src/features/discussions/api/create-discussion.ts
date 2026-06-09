@@ -10,6 +10,7 @@ import { getDiscussionsQueryOptions } from './get-discussions';
 export const createDiscussionInputSchema = z.object({
   title: z.string().min(1, 'Required'),
   body: z.string().min(1, 'Required'),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('MEDIUM'),
 });
 
 export type CreateDiscussionInput = z.infer<typeof createDiscussionInputSchema>;

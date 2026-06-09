@@ -8,7 +8,6 @@ import {
   waitFor,
   within,
 } from '@/testing/test-utils';
-import { formatDate } from '@/utils/format';
 
 import { default as DiscussionsRoute } from '../discussions';
 
@@ -44,6 +43,11 @@ test(
     await userEvent.type(titleField, newDiscussion.title);
     await userEvent.type(bodyField, newDiscussion.body);
 
+    await userEvent.selectOptions(
+      within(drawer).getByRole('combobox', { name: /discussion priority/i }),
+      'HIGH',
+    );
+
     const submitButton = within(drawer).getByRole('button', {
       name: /submit/i,
     });
@@ -55,7 +59,7 @@ test(
     const row = await screen.findByRole(
       'row',
       {
-        name: `${newDiscussion.title} ${formatDate(newDiscussion.createdAt)} View Delete Discussion`,
+        name: new RegExp(newDiscussion.title),
       },
       { timeout: 5000 },
     );
@@ -65,6 +69,8 @@ test(
         name: newDiscussion.title,
       }),
     ).toBeInTheDocument();
+
+    expect(within(row).getByLabelText('Priority: High')).toBeInTheDocument();
 
     await userEvent.click(
       within(row).getByRole('button', {

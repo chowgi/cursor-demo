@@ -25,6 +25,7 @@ const models = {
     body: String,
     authorId: String,
     teamId: String,
+    priority: String,
     createdAt: Date.now,
   },
   comment: {

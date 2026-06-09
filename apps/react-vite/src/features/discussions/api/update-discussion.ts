@@ -6,10 +6,12 @@ import { MutationConfig } from '@/lib/react-query';
 import { Discussion } from '@/types/api';
 
 import { getDiscussionQueryOptions } from './get-discussion';
+import { getDiscussionsQueryOptions } from './get-discussions';
 
 export const updateDiscussionInputSchema = z.object({
   title: z.string().min(1, 'Required'),
   body: z.string().min(1, 'Required'),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH']),
 });
 
 export type UpdateDiscussionInput = z.infer<typeof updateDiscussionInputSchema>;
@@ -39,6 +41,9 @@ export const useUpdateDiscussion = ({
     onSuccess: (data, ...args) => {
       queryClient.refetchQueries({
         queryKey: getDiscussionQueryOptions(data.id).queryKey,
+      });
+      queryClient.invalidateQueries({
+        queryKey: getDiscussionsQueryOptions().queryKey,
       });
       onSuccess?.(data, ...args);
     },
