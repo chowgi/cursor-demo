@@ -9,8 +9,9 @@ export const getDiscussionSuggestions = ({
 }: {
   q: string;
 }): Promise<{ data: Discussion[] }> => {
-  return api.get('/discussions/suggestions', {
-    params: { q },
+  return api.get('/discussions', {
+    params: { q, suggestions: true },
+    skipErrorNotification: true,
   });
 };
 
@@ -23,6 +24,7 @@ export const getDiscussionSuggestionsQueryOptions = ({
     queryKey: ['discussions', 'suggestions', { q }],
     queryFn: () => getDiscussionSuggestions({ q }),
     enabled: q.length >= 2,
+    retry: false,
   });
 };
 

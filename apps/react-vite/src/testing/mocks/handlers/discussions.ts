@@ -59,36 +59,6 @@ const mapDiscussionWithAuthor = (discussion: {
 };
 
 export const discussionsHandlers = [
-  http.get(`${env.API_URL}/discussions/suggestions`, async ({ cookies, request }) => {
-    await networkDelay();
-
-    try {
-      const { user, error } = requireAuth(cookies);
-      if (error) {
-        return HttpResponse.json({ message: error }, { status: 401 });
-      }
-
-      const url = new URL(request.url);
-      const searchQuery = url.searchParams.get('q')?.trim();
-
-      if (!searchQuery || searchQuery.length < 2) {
-        return HttpResponse.json({ data: [] });
-      }
-
-      const suggestions = filterDiscussionsByTeam(user?.teamId)
-        .filter((discussion) => matchesTitlePrefix(discussion.title, searchQuery))
-        .slice(0, 5)
-        .map(mapDiscussionWithAuthor);
-
-      return HttpResponse.json({ data: suggestions });
-    } catch (error: any) {
-      return HttpResponse.json(
-        { message: error?.message || 'Server Error' },
-        { status: 500 },
-      );
-    }
-  }),
-
   http.get(`${env.API_URL}/discussions`, async ({ cookies, request }) => {
     await networkDelay();
 
@@ -99,9 +69,29 @@ export const discussionsHandlers = [
       }
 
       const url = new URL(request.url);
+      const searchQuery = url.searchParams.get('q')?.trim();
+      const isSuggestions = url.searchParams.get('suggestions') === 'true';
+
+      if (isSuggestions) {
+        if (!searchQuery || searchQuery.length < 2) {
+          return HttpResponse.json({ data: [] });
+        }
+
+        const lowerQuery = searchQuery.toLowerCase();
+        const suggestions = filterDiscussionsByTeam(user?.teamId)
+          .filter(
+            (discussion) =>
+              discussion.title.toLowerCase().includes(lowerQuery) ||
+              discussion.body.toLowerCase().includes(lowerQuery) ||
+              matchesTitlePrefix(discussion.title, searchQuery),
+          )
+          .slice(0, 5)
+          .map(mapDiscussionWithAuthor);
+
+        return HttpResponse.json({ data: suggestions });
+      }
 
       const page = Number(url.searchParams.get('page') || 1);
-      const searchQuery = url.searchParams.get('q');
 
       let allDiscussions = db.discussion.findMany({
         where: {

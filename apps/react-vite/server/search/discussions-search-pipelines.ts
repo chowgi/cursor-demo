@@ -23,8 +23,7 @@ const teamFilter = (teamId: string) => ({
 });
 
 /**
- * Autocomplete-only pipeline for typeahead dropdown suggestions.
- * Uses ONLY the autocomplete operator on title (MongoDB recommendation).
+ * Typeahead suggestions: title prefix (autocomplete) + text match on title/body.
  */
 export const buildDiscussionSuggestionsPipeline = ({
   searchQuery,
@@ -35,7 +34,7 @@ export const buildDiscussionSuggestionsPipeline = ({
     $search: {
       index: DISCUSSIONS_SEARCH_INDEX_NAME,
       compound: {
-        must: [
+        should: [
           {
             autocomplete: {
               query: searchQuery,
@@ -43,7 +42,14 @@ export const buildDiscussionSuggestionsPipeline = ({
               tokenOrder: 'any',
             },
           },
+          {
+            text: {
+              query: searchQuery,
+              path: ['title', 'body'],
+            },
+          },
         ],
+        minimumShouldMatch: 1,
         filter: [teamFilter(teamId)],
       },
     },

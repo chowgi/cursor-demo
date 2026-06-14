@@ -22,37 +22,6 @@ const PAGE_SIZE = 10;
 
 export const discussionsRouter = Router();
 
-discussionsRouter.get('/discussions/suggestions', async (req, res) => {
-  try {
-    const { user, error } = await requireAuthUser(req);
-    if (error) {
-      res.status(401).json({ message: error });
-      return;
-    }
-
-    const searchQuery = (req.query.q as string | undefined)?.trim();
-    if (!searchQuery || searchQuery.length < 2) {
-      res.json({ data: [] });
-      return;
-    }
-
-    const discussions = getDiscussionsCollection();
-    const pipeline = buildDiscussionSuggestionsPipeline({
-      searchQuery,
-      teamId: user!.teamId,
-    });
-
-    const result = await discussions.aggregate(pipeline).toArray();
-
-    res.json({
-      data: result.map(serializeDiscussionRead),
-    });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Server Error';
-    res.status(500).json({ message });
-  }
-});
-
 discussionsRouter.get('/discussions', async (req, res) => {
   try {
     const { user, error } = await requireAuthUser(req);
@@ -61,8 +30,30 @@ discussionsRouter.get('/discussions', async (req, res) => {
       return;
     }
 
-    const page = Number(req.query.page ?? 1);
     const searchQuery = (req.query.q as string | undefined)?.trim();
+    const isSuggestions = req.query.suggestions === 'true';
+
+    if (isSuggestions) {
+      if (!searchQuery || searchQuery.length < 2) {
+        res.json({ data: [] });
+        return;
+      }
+
+      const discussions = getDiscussionsCollection();
+      const pipeline = buildDiscussionSuggestionsPipeline({
+        searchQuery,
+        teamId: user!.teamId,
+      });
+
+      const result = await discussions.aggregate(pipeline).toArray();
+
+      res.json({
+        data: result.map(serializeDiscussionRead),
+      });
+      return;
+    }
+
+    const page = Number(req.query.page ?? 1);
     const discussions = getDiscussionsCollection();
 
     if (searchQuery) {
@@ -114,9 +105,19 @@ discussionsRouter.get('/discussions/:discussionId', async (req, res) => {
       return;
     }
 
+    const discussionId = req.params.discussionId;
+
+    if (discussionId === 'suggestions') {
+      res.status(400).json({
+        message:
+          'Use GET /discussions?suggestions=true&q=<query> for search suggestions',
+      });
+      return;
+    }
+
     const discussions = getDiscussionsCollection();
     const discussion = await discussions.findOne({
-      _id: req.params.discussionId,
+      _id: discussionId,
       teamId: user!.teamId,
     });
 
