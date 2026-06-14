@@ -11,7 +11,7 @@ if (!MONGODB_URI) {
   process.exit(1);
 }
 
-async function createSearchIndex() {
+async function updateSearchIndex() {
   const client = new MongoClient(MONGODB_URI);
 
   try {
@@ -21,7 +21,23 @@ async function createSearchIndex() {
     const db = client.db(DATABASE_NAME);
     const collection = db.collection('discussions');
 
-    console.log('Creating search index "discussions_search"...');
+    console.log('Checking for existing search index...');
+    const indexes = await collection.listSearchIndexes().toArray();
+    const existingIndex = indexes.find(
+      (idx) => idx.name === 'discussions_search',
+    );
+
+    if (existingIndex) {
+      console.log('Found existing index "discussions_search"');
+      console.log('Dropping old index...');
+      await collection.dropSearchIndex('discussions_search');
+      console.log('✅ Old index dropped');
+
+      // Wait a moment for the drop to propagate
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+
+    console.log('Creating new search index "discussions_search"...');
 
     const result = await collection.createSearchIndex({
       name: 'discussions_search',
@@ -45,19 +61,36 @@ async function createSearchIndex() {
 
     console.log('✅ Search index created successfully!');
     console.log('Index name:', result);
+    console.log('\nIndex definition:');
+    console.log(
+      JSON.stringify(
+        {
+          mappings: {
+            dynamic: false,
+            fields: {
+              title: { type: 'string' },
+              body: { type: 'string' },
+              teamId: { type: 'string' },
+            },
+          },
+        },
+        null,
+        2,
+      ),
+    );
     console.log(
       '\nNote: The index may take a few minutes to build. Check status with:',
     );
-    console.log('db.discussions.getSearchIndexes()');
+    console.log('yarn search:check-index');
   } catch (error) {
-    console.error('Error creating search index:', error);
+    console.error('Error updating search index:', error);
     throw error;
   } finally {
     await client.close();
   }
 }
 
-createSearchIndex()
+updateSearchIndex()
   .then(() => {
     console.log('\n✅ Done!');
     process.exit(0);
