@@ -19,7 +19,8 @@
     "dev:server": "vite-node --watch server/index.ts | pino-pretty -c",
     "search:create-index": "vite-node scripts/create-search-index.ts",
     "search:check-index": "vite-node scripts/check-search-index.ts",
-    "search:update-index": "vite-node scripts/update-search-index.ts"
+    "search:update-index": "vite-node scripts/update-search-index.ts",
+    "record:search-demo": "vite-node scripts/record-search-demo.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",

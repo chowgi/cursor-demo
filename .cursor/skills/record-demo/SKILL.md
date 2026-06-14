@@ -2,47 +2,58 @@
 name: record-demo
 description: >-
   Record a demo video for discussions search UI changes (autocomplete, fuzzy
-  matching, filtered list). Use when completing search-related Linear issues,
-  before opening a PR, or when the issue requires a demo video artifact.
+  matching, filtered list). Use when completing BEN-15 or any Linear issue
+  that requires a searchable typo demo artifact before opening a PR.
 ---
 
 # Record discussions search demo
 
-Produce a screen recording that proves fuzzy/typo search works end-to-end. Full acceptance criteria and recording steps live in the Linear issue (e.g. BEN-15) — read that issue before recording.
+**Single source of truth:** `docs/discussions-search-demo.md`
 
-## Demo script
+Produce a screen recording that **visually proves** fuzzy typo search works. A video file alone is not sufficient.
 
-1. Log in at `/auth/login` with `admin@demo.com` / `password123`
-2. Open `/app/discussions`
-3. Type `desgn` (typo) in the search combobox
-4. Confirm autocomplete suggests **Design review for dashboard refresh**
-5. Click **Search** — table filters to that discussion
-6. (Optional) Type `xyznotfound` → empty state; clear → full list restored
+## Workflow (do not skip steps)
+
+1. Read `docs/discussions-search-demo.md` and `docs/linear/BEN-15.md`
+2. Use **start-demo** skill — app must be running with MSW + demo seed
+3. **Rehearse first** (must pass before recording):
+
+```bash
+cd apps/react-vite
+yarn record:search-demo --rehearse
+```
+
+4. **Record**:
+
+```bash
+yarn record:search-demo
+# Output: /opt/cursor/artifacts/videos/fuzzy-search-discussions-demo.webm
+```
+
+5. Verify post-recording checklist in the demo spec (duration, size, on-screen moments)
+6. Embed video in PR (BEN-16) — do **not** open PR until video passes
+
+## Required on-screen moments
+
+1. Login (`admin@demo.com` / `password123`)
+2. Full discussions list on `/app/discussions`
+3. Typo `desgn` typed slowly in search combobox (not pasted)
+4. Autocomplete shows **Design review for dashboard refresh**
+5. Search clicked → filtered to 1 result
+6. Final state held ≥2s
 
 ## Prerequisites
 
-1. Use the **start-demo** skill if the app is not running
-2. For recordings without Atlas, use MSW + demo seed in `.env` (do not commit):
+`.env` in `apps/react-vite` (do not commit):
 
-```
+```env
 VITE_APP_ENABLE_API_MOCKING=true
 VITE_APP_ENABLE_DEMO_SEEDING=true
 ```
 
-3. Cloud agents: save video to `/opt/cursor/artifacts/videos/fuzzy-search-discussions-demo.webm`
+Cloud agents: save video to `/opt/cursor/artifacts/videos/fuzzy-search-discussions-demo.webm`
 
-## Record
-
-```bash
-cd apps/react-vite
-npx playwright install chromium   # if needed
-yarn dev --port 3000 --host 127.0.0.1   # background, MSW mode
-# Record via Playwright (see Linear BEN-15) or yarn record:search-demo if that script exists on your branch
-```
-
-## PR requirement
-
-Before opening the PR, embed the video under **Demo**:
+## PR embed
 
 ```markdown
 ## Demo
@@ -52,6 +63,7 @@ Before opening the PR, embed the video under **Demo**:
 
 ## Rules
 
-- Do not open or push the PR until the video is recorded and embedded
-- Do not skip the video when the Linear issue DoD requires demo recording
+- Rehearsal failure = do not record; fix implementation first
+- Do not open or push the PR until video passes the demo spec checklist
 - Do not commit `.env`
+- Reject anti-patterns listed in `docs/discussions-search-demo.md`
