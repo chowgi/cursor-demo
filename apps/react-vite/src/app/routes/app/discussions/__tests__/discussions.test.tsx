@@ -1,7 +1,9 @@
 import type { Mock } from 'vitest';
 
-import { createDiscussion } from '@/testing/data-generators';
+import { createDiscussion as generateDiscussion } from '@/testing/data-generators';
 import {
+  createDiscussion,
+  createUser,
   renderApp,
   screen,
   userEvent,
@@ -26,7 +28,7 @@ test(
   async () => {
     await renderApp(<DiscussionsRoute />);
 
-    const newDiscussion = createDiscussion();
+    const newDiscussion = generateDiscussion();
 
     expect(await screen.findByText(/no entries/i)).toBeInTheDocument();
 
@@ -91,6 +93,57 @@ test(
       within(row).queryByRole('cell', {
         name: newDiscussion.title,
       }),
+    ).not.toBeInTheDocument();
+  },
+);
+
+test(
+  'should match discussions with fuzzy typo-tolerant search',
+  { timeout: 15000 },
+  async () => {
+    const user = await createUser({ role: 'ADMIN' });
+    const designDiscussionTitle = 'Design review for dashboard refresh';
+
+    await createDiscussion({
+      title: designDiscussionTitle,
+      body: 'The updated dashboard layout adds stat cards and recent activity.',
+      teamId: user.teamId,
+      authorId: user.id,
+    });
+
+    await createDiscussion({
+      title: 'API versioning strategy',
+      body: 'Proposal: version public endpoints under /v1.',
+      teamId: user.teamId,
+      authorId: user.id,
+    });
+
+    await renderApp(<DiscussionsRoute />, { user });
+
+    const searchInput = screen.getByRole('combobox', {
+      name: /search discussions/i,
+    });
+
+    await userEvent.type(searchInput, 'desgn');
+
+    expect(
+      await screen.findByRole('option', {
+        name: new RegExp(designDiscussionTitle, 'i'),
+      }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /submit search/i }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('cell', { name: designDiscussionTitle }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('cell', { name: 'API versioning strategy' }),
     ).not.toBeInTheDocument();
   },
 );
