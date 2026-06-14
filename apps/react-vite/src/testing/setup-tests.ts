@@ -3,11 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import Cookies from 'js-cookie';
 
 import { AUTH_COOKIE } from '../../server/auth';
-import {
-  resetTestServerDatabase,
-  startTestServer,
-  stopTestServer,
-} from '@/testing/test-server';
+import { startTestServer, stopTestServer } from '@/testing/test-server';
 
 vi.mock('zustand');
 
@@ -37,5 +33,4 @@ beforeEach(async () => {
   });
 
   Cookies.remove(AUTH_COOKIE);
-  await resetTestServerDatabase();
 });

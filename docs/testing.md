@@ -16,7 +16,7 @@ Integration testing checks how different parts of your application work together
 
 [Integration Test Example Code](../apps/react-vite/src/app/routes/app/discussions/__tests__/discussion.test.tsx)
 
-Integration tests in the react-vite app run against the real Express API backed by an in-memory MongoDB instance (`mongodb-memory-server`). Test helpers seed data directly into MongoDB and components make actual HTTP requests via Axios.
+Integration tests in the react-vite app run against the real Express API backed by MongoDB Atlas (via `MONGODB_URI` in `.env`). Test helpers seed data directly into MongoDB and components make actual HTTP requests via Axios.
 
 [Test Server Setup Example Code](../apps/react-vite/src/testing/test-server.ts)
 
@@ -28,7 +28,7 @@ End-to-End Testing is a method that evaluates an application as a whole. These t
 
 [E2E Example Code](../apps/react-vite/e2e/tests/smoke.spec.ts)
 
-Playwright starts both the Vite dev server and an ephemeral MongoDB API server before running E2E specs.
+Playwright starts both the Vite dev server and the MongoDB API server (using `MONGODB_URI`) before running E2E specs.
 
 ## Recommended Tooling:
 
@@ -50,7 +50,7 @@ You define all the commands a real world user would execute when using the app a
 
 #### MongoDB API (`apps/react-vite/server`)
 
-The react-vite app uses a real Express + MongoDB API for development and testing. Integration tests spin up `mongodb-memory-server`; local development and production demos use Atlas or another MongoDB deployment via `MONGODB_URI`.
+The react-vite app uses a real Express + MongoDB API for development, testing, and E2E. Set `MONGODB_URI` in `.env` to point at Atlas or another MongoDB deployment.
 
 [API Routes Example Code](../apps/react-vite/server/routes/auth.ts)
 

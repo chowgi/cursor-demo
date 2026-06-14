@@ -157,7 +157,7 @@ export const useDiscussions = (params: GetDiscussionsParams) => {
 - **Vitest** - Test runner (Jest-compatible but faster)
 - **Testing Library** - Component testing utilities
 - **Playwright** - E2E testing framework
-- **mongodb-memory-server** - In-memory MongoDB for Vitest and E2E
+- **MongoDB Atlas** - Shared database for development, Vitest integration tests, and E2E (via `MONGODB_URI`)
 
 ### Testing Patterns
 - Test behavior, not implementation details
@@ -261,7 +261,7 @@ export const useDiscussions = (params: GetDiscussionsParams) => {
 ### Testing & Development
 - **Vitest** for unit/integration tests
 - **Playwright** for E2E tests
-- **mongodb-memory-server** for test database isolation
+- **MongoDB Atlas** via `MONGODB_URI` for integration and E2E test database
 - **Storybook** for component development
 
 ## Common Patterns

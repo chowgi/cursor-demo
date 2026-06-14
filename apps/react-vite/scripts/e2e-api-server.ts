@@ -1,12 +1,16 @@
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const port = Number(process.env.APP_MOCK_API_PORT ?? 8080);
 
 async function main(): Promise<void> {
-  const memoryServer = await MongoMemoryServer.create();
-  process.env.MONGODB_URI = memoryServer.getUri('cursor-demo-e2e');
-  process.env.DATABASE_NAME = 'cursor-demo-e2e';
-  process.env.ENABLE_DEMO_SEEDING = 'false';
+  if (!process.env.MONGODB_URI) {
+    throw new Error(
+      'MONGODB_URI is required for the E2E API server. Copy .env.example to .env and set MONGODB_URI.',
+    );
+  }
+
   process.env.APP_MOCK_API_PORT = String(port);
 
   const { startApiServer } = await import('../server/start-server');

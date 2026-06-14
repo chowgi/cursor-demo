@@ -18,7 +18,8 @@
     "dev:server": "vite-node --watch server/index.ts | pino-pretty -c",
     "search:create-index": "vite-node scripts/create-search-index.ts",
     "search:check-index": "vite-node scripts/check-search-index.ts",
-    "search:update-index": "vite-node scripts/update-search-index.ts"
+    "search:update-index": "vite-node scripts/update-search-index.ts",
+    "verify:discussions-flow": "vite-node scripts/verify-discussions-flow.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
@@ -102,7 +103,6 @@
     "js-cookie": "^3.0.5",
     "jsdom": "^24.0.0",
     "lint-staged": "^15.2.2",
-    "mongodb-memory-server": "^10.1.4",
     "pino-http": "^10.1.0",
     "pino-pretty": "^11.1.0",
     "plop": "^4.0.1",

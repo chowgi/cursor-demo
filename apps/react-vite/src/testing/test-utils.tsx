@@ -162,23 +162,18 @@ export const renderApp = async (
       },
     ],
     {
-      initialEntries: url ? ['/', url as string] : ['/'],
-      initialIndex: url ? 1 : 0,
+      initialEntries: [(url as string) || '/'],
+      initialIndex: 0,
     },
   );
 
   const returnValue = {
-    ...rtlRender(ui, {
-      wrapper: () => {
-        return (
-          <AppProvider>
-            <RouterProvider router={router} />
-          </AppProvider>
-        );
-      },
+    ...rtlRender(<RouterProvider router={router} />, {
+      wrapper: ({ children }) => <AppProvider>{children}</AppProvider>,
       ...renderOptions,
     }),
     user: initializedUser,
+    router,
   };
 
   await waitForLoadingToFinish();

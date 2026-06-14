@@ -1,5 +1,6 @@
 import type { Mock } from 'vitest';
 
+import { DEMO_PASSWORD } from '../../../../../../server/seed-data';
 import { createDiscussion } from '@/testing/data-generators';
 import {
   renderApp,
@@ -92,5 +93,46 @@ test(
         name: newDiscussion.title,
       }),
     ).not.toBeInTheDocument();
+  },
+);
+
+test(
+  'should search discussions and clear search',
+  { timeout: 15000 },
+  async () => {
+    await renderApp(<DiscussionsRoute />, {
+      user: { email: 'admin@demo.com', password: DEMO_PASSWORD },
+      path: '/app/discussions',
+      url: '/app/discussions',
+    });
+
+    const searchInput = screen.getByRole('combobox', {
+      name: /search discussions/i,
+    });
+
+    await userEvent.type(searchInput, 'dashboard');
+    await userEvent.click(
+      screen.getByRole('button', { name: /submit search/i }),
+    );
+
+    await screen.findByText(/showing results for:/i);
+    expect(screen.getByText('"dashboard"')).toBeInTheDocument();
+
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole('cell', {
+            name: /design review for dashboard refresh/i,
+          }),
+        ).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
+
+    await userEvent.click(screen.getByText('Clear'));
+
+    await waitFor(() => {
+      expect(screen.queryByText(/showing results for:/i)).not.toBeInTheDocument();
+    });
   },
 );
