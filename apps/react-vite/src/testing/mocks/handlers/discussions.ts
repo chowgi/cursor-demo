@@ -28,8 +28,9 @@ export const discussionsHandlers = [
       const url = new URL(request.url);
 
       const page = Number(url.searchParams.get('page') || 1);
+      const searchQuery = url.searchParams.get('q');
 
-      const total = db.discussion.count({
+      let allDiscussions = db.discussion.findMany({
         where: {
           teamId: {
             equals: user?.teamId,
@@ -37,18 +38,20 @@ export const discussionsHandlers = [
         },
       });
 
+      if (searchQuery) {
+        const lowerQuery = searchQuery.toLowerCase();
+        allDiscussions = allDiscussions.filter(
+          (d) =>
+            d.title.toLowerCase().includes(lowerQuery) ||
+            d.body.toLowerCase().includes(lowerQuery),
+        );
+      }
+
+      const total = allDiscussions.length;
       const totalPages = Math.ceil(total / 10);
 
-      const result = db.discussion
-        .findMany({
-          where: {
-            teamId: {
-              equals: user?.teamId,
-            },
-          },
-          take: 10,
-          skip: 10 * (page - 1),
-        })
+      const result = allDiscussions
+        .slice(10 * (page - 1), 10 * page)
         .map(({ authorId, ...discussion }) => {
           const author = db.user.findFirst({
             where: {
@@ -62,6 +65,7 @@ export const discussionsHandlers = [
             author: author ? sanitizeUser(author) : {},
           };
         });
+
       return HttpResponse.json({
         data: result,
         meta: {

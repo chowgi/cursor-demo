@@ -27,23 +27,80 @@ discussionsRouter.get('/discussions', async (req, res) => {
     }
 
     const page = Number(req.query.page ?? 1);
+    const searchQuery = req.query.q as string | undefined;
     const discussions = getDiscussionsCollection();
-    const filter = { teamId: user!.teamId };
 
-    const total = await discussions.countDocuments(filter);
-    const totalPages = Math.ceil(total / PAGE_SIZE);
+    if (searchQuery) {
+      const pipeline: any[] = [
+        {
+          $search: {
+            index: 'discussions_search',
+            compound: {
+              must: [
+                {
+                  autocomplete: {
+                    query: searchQuery,
+                    path: 'title',
+                    fuzzy: {
+                      maxEdits: 2,
+                    },
+                  },
+                },
+              ],
+              filter: [
+                {
+                  text: {
+                    query: user!.teamId,
+                    path: 'teamId',
+                  },
+                },
+              ],
+            },
+          },
+        },
+        {
+          $addFields: {
+            score: { $meta: 'searchScore' },
+          },
+        },
+        {
+          $facet: {
+            metadata: [{ $count: 'total' }],
+            data: [
+              { $skip: PAGE_SIZE * (page - 1) },
+              { $limit: PAGE_SIZE },
+            ],
+          },
+        },
+      ];
 
-    const result = await discussions
-      .find(filter)
-      .sort({ createdAt: -1 })
-      .skip(PAGE_SIZE * (page - 1))
-      .limit(PAGE_SIZE)
-      .toArray();
+      const [facetResult] = await discussions.aggregate(pipeline).toArray();
+      const total = facetResult.metadata[0]?.total ?? 0;
+      const totalPages = Math.ceil(total / PAGE_SIZE);
+      const result = facetResult.data;
 
-    res.json({
-      data: result.map(serializeDiscussionRead),
-      meta: { page, total, totalPages },
-    });
+      res.json({
+        data: result.map(serializeDiscussionRead),
+        meta: { page, total, totalPages },
+      });
+    } else {
+      const filter = { teamId: user!.teamId };
+
+      const total = await discussions.countDocuments(filter);
+      const totalPages = Math.ceil(total / PAGE_SIZE);
+
+      const result = await discussions
+        .find(filter)
+        .sort({ createdAt: -1 })
+        .skip(PAGE_SIZE * (page - 1))
+        .limit(PAGE_SIZE)
+        .toArray();
+
+      res.json({
+        data: result.map(serializeDiscussionRead),
+        meta: { page, total, totalPages },
+      });
+    }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Server Error';
     res.status(500).json({ message });
