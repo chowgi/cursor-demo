@@ -1,6 +1,7 @@
 import type { Mock } from 'vitest';
 
 import { createDiscussion } from '@/testing/data-generators';
+import { seedDemoData } from '@/testing/mocks/seed-db';
 import {
   renderApp,
   screen,
@@ -19,6 +20,46 @@ beforeAll(() => {
 afterAll(() => {
   (console.error as Mock).mockRestore();
 });
+
+test(
+  'should fuzzy match typo desgn to Design review discussion',
+  { timeout: 10000 },
+  async () => {
+    await seedDemoData();
+
+    await renderApp(<DiscussionsRoute />, {
+      user: { email: 'admin@demo.com', password: 'password123' },
+    });
+
+    const searchInput = screen.getByRole('combobox', {
+      name: /search discussions/i,
+    });
+
+    await userEvent.type(searchInput, 'desgn');
+
+    const suggestion = await screen.findByRole('option', {
+      name: /design review for dashboard refresh/i,
+    });
+    expect(suggestion).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /submit search/i }),
+    );
+
+    await screen.findByText(/showing results for:/i);
+    expect(screen.getByText('"desgn"')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText(/1 result/i)).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByRole('cell', {
+        name: /design review for dashboard refresh/i,
+      }),
+    ).toBeInTheDocument();
+  },
+);
 
 test(
   'should create, render and delete discussions',

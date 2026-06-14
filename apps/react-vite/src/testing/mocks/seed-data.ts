@@ -92,7 +92,7 @@ export const demoDiscussions = [
   {
     id: 'demo-discussion-retrospective',
     title: 'Sprint retrospective notes',
-    body: 'What went well: faster PR reviews and fewer flaky tests. What to improve: earlier design alignment and clearer acceptance criteria.',
+    body: 'What went well: faster PR reviews and fewer flaky tests. What to improve: earlier product alignment and clearer acceptance criteria.',
     authorId: 'demo-user-admin',
     teamId: DEMO_TEAM_ID,
     createdAt: BASE_TIMESTAMP + 50_000,

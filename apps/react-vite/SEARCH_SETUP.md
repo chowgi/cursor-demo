@@ -123,7 +123,7 @@ When a search query is provided, it uses MongoDB's `$search` aggregation stage:
           autocomplete: {
             query: searchQuery,
             path: 'title',
-            fuzzy: { maxEdits: 2 }
+            fuzzy: { maxEdits: 1 }
           }
         }
       ],

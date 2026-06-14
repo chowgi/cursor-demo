@@ -3,6 +3,7 @@ import { HttpResponse, http } from 'msw';
 import { env } from '@/config/env';
 
 import { db, persistDb } from '../db';
+import { fuzzyMatchesText } from '../fuzzy-search';
 import {
   requireAuth,
   requireAdmin,
@@ -58,6 +59,11 @@ const mapDiscussionWithAuthor = (discussion: {
   };
 };
 
+const matchesSearchQuery = (discussion: { title: string; body: string }, query: string) =>
+  fuzzyMatchesText(discussion.title, query) ||
+  fuzzyMatchesText(discussion.body, query) ||
+  matchesTitlePrefix(discussion.title, query);
+
 export const discussionsHandlers = [
   http.get(`${env.API_URL}/discussions`, async ({ cookies, request }) => {
     await networkDelay();
@@ -77,14 +83,8 @@ export const discussionsHandlers = [
           return HttpResponse.json({ data: [] });
         }
 
-        const lowerQuery = searchQuery.toLowerCase();
         const suggestions = filterDiscussionsByTeam(user?.teamId)
-          .filter(
-            (discussion) =>
-              discussion.title.toLowerCase().includes(lowerQuery) ||
-              discussion.body.toLowerCase().includes(lowerQuery) ||
-              matchesTitlePrefix(discussion.title, searchQuery),
-          )
+          .filter((discussion) => matchesSearchQuery(discussion, searchQuery))
           .slice(0, 5)
           .map(mapDiscussionWithAuthor);
 
@@ -102,11 +102,8 @@ export const discussionsHandlers = [
       });
 
       if (searchQuery) {
-        const lowerQuery = searchQuery.toLowerCase();
-        allDiscussions = allDiscussions.filter(
-          (d) =>
-            d.title.toLowerCase().includes(lowerQuery) ||
-            d.body.toLowerCase().includes(lowerQuery),
+        allDiscussions = allDiscussions.filter((d) =>
+          matchesSearchQuery(d, searchQuery),
         );
       }
 
