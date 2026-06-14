@@ -41,9 +41,22 @@ export const DiscussionsList = ({
 
   if (!discussions) return null;
 
+  const activeSearch = searchParams.get('q');
+
   return (
     <div className="space-y-4">
       <DiscussionsSearchAutocomplete />
+      {activeSearch && (
+        <div className="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm">
+          <span className="text-muted-foreground">
+            Showing results for:
+          </span>
+          <span className="font-medium">&quot;{activeSearch}&quot;</span>
+          <span className="text-muted-foreground">
+            ({meta?.total || 0} {meta?.total === 1 ? 'result' : 'results'})
+          </span>
+        </div>
+      )}
       <Table
         data={discussions}
         columns={[

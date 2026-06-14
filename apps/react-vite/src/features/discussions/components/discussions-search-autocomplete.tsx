@@ -18,13 +18,18 @@ export const DiscussionsSearchAutocomplete = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const shouldFetchSuggestions = debouncedValue && debouncedValue.length >= 2;
+
   const suggestionsQuery = useDiscussions({
-    q: debouncedValue || undefined,
+    q: shouldFetchSuggestions ? debouncedValue : undefined,
     page: 1,
   });
 
-  const suggestions = suggestionsQuery.data?.data || [];
-  const isLoading = suggestionsQuery.isLoading;
+  const suggestions =
+    shouldFetchSuggestions && suggestionsQuery.data?.data
+      ? suggestionsQuery.data.data
+      : [];
+  const isLoading = shouldFetchSuggestions && suggestionsQuery.isLoading;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -35,12 +40,20 @@ export const DiscussionsSearchAutocomplete = () => {
   }, [searchValue]);
 
   useEffect(() => {
-    if (debouncedValue && suggestions.length > 0) {
+    if (
+      shouldFetchSuggestions &&
+      suggestions.length > 0 &&
+      !suggestionsQuery.isLoading
+    ) {
       setIsOpen(true);
-    } else {
+    } else if (!shouldFetchSuggestions || suggestionsQuery.isLoading) {
       setIsOpen(false);
     }
-  }, [debouncedValue, suggestions.length]);
+  }, [
+    shouldFetchSuggestions,
+    suggestions.length,
+    suggestionsQuery.isLoading,
+  ]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -58,15 +71,17 @@ export const DiscussionsSearchAutocomplete = () => {
   }, []);
 
   const handleSearch = (query: string) => {
+    const trimmedQuery = query.trim();
     const newParams = new URLSearchParams(searchParams);
-    if (query) {
-      newParams.set('q', query);
+    if (trimmedQuery) {
+      newParams.set('q', trimmedQuery);
     } else {
       newParams.delete('q');
     }
     newParams.delete('page');
     setSearchParams(newParams);
     setIsOpen(false);
+    setHighlightedIndex(-1);
     inputRef.current?.blur();
   };
 
