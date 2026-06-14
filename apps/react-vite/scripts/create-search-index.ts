@@ -1,6 +1,11 @@
 import { MongoClient } from 'mongodb';
 import dotenv from 'dotenv';
 
+import {
+  DISCUSSIONS_SEARCH_INDEX_NAME,
+  discussionsSearchIndexDefinition,
+} from '../server/search/discussions-search-index';
+
 dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -21,34 +26,21 @@ async function createSearchIndex() {
     const db = client.db(DATABASE_NAME);
     const collection = db.collection('discussions');
 
-    console.log('Creating search index "discussions_search"...');
+    console.log(`Creating search index "${DISCUSSIONS_SEARCH_INDEX_NAME}"...`);
 
     const result = await collection.createSearchIndex({
-      name: 'discussions_search',
-      definition: {
-        mappings: {
-          dynamic: false,
-          fields: {
-            title: {
-              type: 'autocomplete',
-            },
-            body: {
-              type: 'string',
-            },
-            teamId: {
-              type: 'string',
-            },
-          },
-        },
-      },
+      name: DISCUSSIONS_SEARCH_INDEX_NAME,
+      definition: discussionsSearchIndexDefinition,
     });
 
     console.log('✅ Search index created successfully!');
     console.log('Index name:', result);
+    console.log('\nIndex definition:');
+    console.log(JSON.stringify(discussionsSearchIndexDefinition, null, 2));
     console.log(
       '\nNote: The index may take a few minutes to build. Check status with:',
     );
-    console.log('db.discussions.getSearchIndexes()');
+    console.log('yarn search:check-index');
   } catch (error) {
     console.error('Error creating search index:', error);
     throw error;

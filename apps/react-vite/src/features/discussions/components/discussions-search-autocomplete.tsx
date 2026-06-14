@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/utils/cn';
 
-import { useDiscussions } from '../api/get-discussions';
+import { useDiscussionSuggestions } from '../api/get-discussion-suggestions';
 
 export const DiscussionsSearchAutocomplete = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -18,42 +18,36 @@ export const DiscussionsSearchAutocomplete = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const shouldFetchSuggestions = debouncedValue && debouncedValue.length >= 2;
+  const shouldFetchSuggestions = debouncedValue.trim().length >= 2;
 
-  const suggestionsQuery = useDiscussions({
-    q: shouldFetchSuggestions ? debouncedValue : undefined,
-    page: 1,
+  const suggestionsQuery = useDiscussionSuggestions({
+    q: debouncedValue.trim(),
+    queryConfig: {
+      enabled: shouldFetchSuggestions,
+    },
   });
 
-  const suggestions =
-    shouldFetchSuggestions && suggestionsQuery.data?.data
-      ? suggestionsQuery.data.data
-      : [];
-  const isLoading = shouldFetchSuggestions && suggestionsQuery.isLoading;
+  const suggestions = shouldFetchSuggestions
+    ? (suggestionsQuery.data?.data ?? [])
+    : [];
+  const isLoading = shouldFetchSuggestions && suggestionsQuery.isFetching;
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedValue(searchValue);
-    }, 300);
+    }, 200);
 
     return () => clearTimeout(timer);
   }, [searchValue]);
 
   useEffect(() => {
-    if (
-      shouldFetchSuggestions &&
-      suggestions.length > 0 &&
-      !suggestionsQuery.isLoading
-    ) {
+    if (shouldFetchSuggestions) {
       setIsOpen(true);
-    } else if (!shouldFetchSuggestions || suggestionsQuery.isLoading) {
+    } else {
       setIsOpen(false);
+      setHighlightedIndex(-1);
     }
-  }, [
-    shouldFetchSuggestions,
-    suggestions.length,
-    suggestionsQuery.isLoading,
-  ]);
+  }, [shouldFetchSuggestions]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -92,10 +86,12 @@ export const DiscussionsSearchAutocomplete = () => {
 
   const handleClear = () => {
     setSearchValue('');
+    setDebouncedValue('');
     const newParams = new URLSearchParams(searchParams);
     newParams.delete('q');
     newParams.delete('page');
     setSearchParams(newParams);
+    setIsOpen(false);
     inputRef.current?.focus();
   };
 
@@ -135,6 +131,8 @@ export const DiscussionsSearchAutocomplete = () => {
     handleSearch(title);
   };
 
+  const showDropdown = isOpen && shouldFetchSuggestions;
+
   return (
     <div className="relative w-full">
       <form onSubmit={handleSubmit} className="flex gap-2">
@@ -148,14 +146,14 @@ export const DiscussionsSearchAutocomplete = () => {
               onChange={(e) => setSearchValue(e.target.value)}
               onKeyDown={handleKeyDown}
               onFocus={() => {
-                if (debouncedValue && suggestions.length > 0) {
+                if (shouldFetchSuggestions) {
                   setIsOpen(true);
                 }
               }}
               placeholder="Search discussions..."
               className="flex h-9 w-full rounded-md border border-input bg-transparent py-1 pl-9 pr-9 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               aria-label="Search discussions"
-              aria-expanded={isOpen}
+              aria-expanded={showDropdown}
               aria-controls="search-suggestions"
               aria-autocomplete="list"
               role="combobox"
@@ -172,7 +170,7 @@ export const DiscussionsSearchAutocomplete = () => {
             )}
           </div>
 
-          {isOpen && (
+          {showDropdown && (
             <div
               ref={dropdownRef}
               id="search-suggestions"
@@ -185,7 +183,7 @@ export const DiscussionsSearchAutocomplete = () => {
                 </div>
               ) : suggestions.length > 0 ? (
                 <ul className="max-h-[300px] overflow-y-auto py-1">
-                  {suggestions.slice(0, 5).map((discussion, index) => (
+                  {suggestions.map((discussion, index) => (
                     <li
                       key={discussion.id}
                       role="option"

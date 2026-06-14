@@ -1,6 +1,11 @@
 import { MongoClient } from 'mongodb';
 import dotenv from 'dotenv';
 
+import {
+  DISCUSSIONS_SEARCH_INDEX_NAME,
+  discussionsSearchIndexDefinition,
+} from '../server/search/discussions-search-index';
+
 dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -24,60 +29,29 @@ async function updateSearchIndex() {
     console.log('Checking for existing search index...');
     const indexes = await collection.listSearchIndexes().toArray();
     const existingIndex = indexes.find(
-      (idx) => idx.name === 'discussions_search',
+      (idx) => idx.name === DISCUSSIONS_SEARCH_INDEX_NAME,
     );
 
     if (existingIndex) {
-      console.log('Found existing index "discussions_search"');
+      console.log(`Found existing index "${DISCUSSIONS_SEARCH_INDEX_NAME}"`);
       console.log('Dropping old index...');
-      await collection.dropSearchIndex('discussions_search');
+      await collection.dropSearchIndex(DISCUSSIONS_SEARCH_INDEX_NAME);
       console.log('✅ Old index dropped');
 
-      // Wait a moment for the drop to propagate
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
 
-    console.log('Creating new search index "discussions_search"...');
+    console.log(`Creating new search index "${DISCUSSIONS_SEARCH_INDEX_NAME}"...`);
 
     const result = await collection.createSearchIndex({
-      name: 'discussions_search',
-      definition: {
-        mappings: {
-          dynamic: false,
-          fields: {
-            title: {
-              type: 'autocomplete',
-            },
-            body: {
-              type: 'string',
-            },
-            teamId: {
-              type: 'string',
-            },
-          },
-        },
-      },
+      name: DISCUSSIONS_SEARCH_INDEX_NAME,
+      definition: discussionsSearchIndexDefinition,
     });
 
     console.log('✅ Search index created successfully!');
     console.log('Index name:', result);
     console.log('\nIndex definition:');
-    console.log(
-      JSON.stringify(
-        {
-          mappings: {
-            dynamic: false,
-            fields: {
-              title: { type: 'string' },
-              body: { type: 'string' },
-              teamId: { type: 'string' },
-            },
-          },
-        },
-        null,
-        2,
-      ),
-    );
+    console.log(JSON.stringify(discussionsSearchIndexDefinition, null, 2));
     console.log(
       '\nNote: The index may take a few minutes to build. Check status with:',
     );

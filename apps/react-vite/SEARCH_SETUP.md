@@ -59,19 +59,24 @@ If you prefer to create the index manually:
   "mappings": {
     "dynamic": false,
     "fields": {
-      "title": {
-        "type": "autocomplete"
-      },
-      "body": {
-        "type": "string"
-      },
-      "teamId": {
-        "type": "string"
-      }
+      "title": [
+        { "type": "string" },
+        {
+          "type": "autocomplete",
+          "tokenization": "edgeGram",
+          "minGrams": 2,
+          "maxGrams": 15,
+          "foldDiacritics": true
+        }
+      ],
+      "body": { "type": "string" },
+      "teamId": { "type": "string" }
     }
   }
 }
 ```
+
+The `title` field uses **multi-type indexing** per MongoDB docs: `string` for full-text and `autocomplete` with `edgeGram` for prefix prediction as you type.
 
 9. Name the index: `discussions_search`
 10. Click **Create Search Index**

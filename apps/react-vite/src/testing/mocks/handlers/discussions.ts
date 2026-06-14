@@ -15,7 +15,80 @@ type DiscussionBody = {
   body: string;
 };
 
+const filterDiscussionsByTeam = (teamId: string | undefined) =>
+  db.discussion.findMany({
+    where: {
+      teamId: {
+        equals: teamId,
+      },
+    },
+  });
+
+const matchesTitlePrefix = (title: string, query: string) => {
+  const lowerQuery = query.toLowerCase();
+  const lowerTitle = title.toLowerCase();
+
+  if (lowerTitle.startsWith(lowerQuery)) {
+    return true;
+  }
+
+  return lowerTitle.split(/\s+/).some((word) => word.startsWith(lowerQuery));
+};
+
+const mapDiscussionWithAuthor = (discussion: {
+  authorId: string;
+  id: string;
+  title: string;
+  body: string;
+  teamId: string;
+  createdAt: number;
+}) => {
+  const { authorId, ...rest } = discussion;
+  const author = db.user.findFirst({
+    where: {
+      id: {
+        equals: authorId,
+      },
+    },
+  });
+
+  return {
+    ...rest,
+    author: author ? sanitizeUser(author) : {},
+  };
+};
+
 export const discussionsHandlers = [
+  http.get(`${env.API_URL}/discussions/suggestions`, async ({ cookies, request }) => {
+    await networkDelay();
+
+    try {
+      const { user, error } = requireAuth(cookies);
+      if (error) {
+        return HttpResponse.json({ message: error }, { status: 401 });
+      }
+
+      const url = new URL(request.url);
+      const searchQuery = url.searchParams.get('q')?.trim();
+
+      if (!searchQuery || searchQuery.length < 2) {
+        return HttpResponse.json({ data: [] });
+      }
+
+      const suggestions = filterDiscussionsByTeam(user?.teamId)
+        .filter((discussion) => matchesTitlePrefix(discussion.title, searchQuery))
+        .slice(0, 5)
+        .map(mapDiscussionWithAuthor);
+
+      return HttpResponse.json({ data: suggestions });
+    } catch (error: any) {
+      return HttpResponse.json(
+        { message: error?.message || 'Server Error' },
+        { status: 500 },
+      );
+    }
+  }),
+
   http.get(`${env.API_URL}/discussions`, async ({ cookies, request }) => {
     await networkDelay();
 
@@ -52,19 +125,7 @@ export const discussionsHandlers = [
 
       const result = allDiscussions
         .slice(10 * (page - 1), 10 * page)
-        .map(({ authorId, ...discussion }) => {
-          const author = db.user.findFirst({
-            where: {
-              id: {
-                equals: authorId,
-              },
-            },
-          });
-          return {
-            ...discussion,
-            author: author ? sanitizeUser(author) : {},
-          };
-        });
+        .map(mapDiscussionWithAuthor);
 
       return HttpResponse.json({
         data: result,
