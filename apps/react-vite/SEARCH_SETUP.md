@@ -60,7 +60,7 @@ If you prefer to create the index manually:
     "dynamic": false,
     "fields": {
       "title": {
-        "type": "string"
+        "type": "autocomplete"
       },
       "body": {
         "type": "string"

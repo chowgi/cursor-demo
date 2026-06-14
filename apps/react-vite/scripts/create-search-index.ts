@@ -30,7 +30,7 @@ async function createSearchIndex() {
           dynamic: false,
           fields: {
             title: {
-              type: 'string',
+              type: 'autocomplete',
             },
             body: {
               type: 'string',

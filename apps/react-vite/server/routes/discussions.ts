@@ -36,14 +36,21 @@ discussionsRouter.get('/discussions', async (req, res) => {
           $search: {
             index: 'discussions_search',
             compound: {
-              must: [
+              should: [
+                {
+                  autocomplete: {
+                    query: searchQuery,
+                    path: 'title',
+                  },
+                },
                 {
                   text: {
                     query: searchQuery,
-                    path: ['title', 'body'],
+                    path: 'body',
                   },
                 },
               ],
+              minimumShouldMatch: 1,
               filter: [
                 {
                   text: {

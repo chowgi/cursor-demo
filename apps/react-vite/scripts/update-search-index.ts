@@ -46,7 +46,7 @@ async function updateSearchIndex() {
           dynamic: false,
           fields: {
             title: {
-              type: 'string',
+              type: 'autocomplete',
             },
             body: {
               type: 'string',
