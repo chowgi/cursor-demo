@@ -15,6 +15,49 @@ type DiscussionBody = {
   body: string;
 };
 
+const filterDiscussionsByTeam = (teamId: string | undefined) =>
+  db.discussion.findMany({
+    where: {
+      teamId: {
+        equals: teamId,
+      },
+    },
+  });
+
+const matchesTitlePrefix = (title: string, query: string) => {
+  const lowerQuery = query.toLowerCase();
+  const lowerTitle = title.toLowerCase();
+
+  if (lowerTitle.startsWith(lowerQuery)) {
+    return true;
+  }
+
+  return lowerTitle.split(/\s+/).some((word) => word.startsWith(lowerQuery));
+};
+
+const mapDiscussionWithAuthor = (discussion: {
+  authorId: string;
+  id: string;
+  title: string;
+  body: string;
+  teamId: string;
+  createdAt: number;
+}) => {
+  const { authorId, ...rest } = discussion;
+  const author = db.user.findFirst({
+    where: {
+      id: {
+        equals: authorId,
+      },
+    },
+  });
+
+  return {
+    ...rest,
+    author: author ? sanitizeUser(author) : {},
+  };
+};
+
 export const discussionsHandlers = [
   http.get(`${env.API_URL}/discussions`, async ({ cookies, request }) => {
     await networkDelay();
@@ -26,10 +69,31 @@ export const discussionsHandlers = [
       }
 
       const url = new URL(request.url);
+      const searchQuery = url.searchParams.get('q')?.trim();
+      const isSuggestions = url.searchParams.get('suggestions') === 'true';
+
+      if (isSuggestions) {
+        if (!searchQuery || searchQuery.length < 2) {
+          return HttpResponse.json({ data: [] });
+        }
+
+        const lowerQuery = searchQuery.toLowerCase();
+        const suggestions = filterDiscussionsByTeam(user?.teamId)
+          .filter(
+            (discussion) =>
+              discussion.title.toLowerCase().includes(lowerQuery) ||
+              discussion.body.toLowerCase().includes(lowerQuery) ||
+              matchesTitlePrefix(discussion.title, searchQuery),
+          )
+          .slice(0, 5)
+          .map(mapDiscussionWithAuthor);
+
+        return HttpResponse.json({ data: suggestions });
+      }
 
       const page = Number(url.searchParams.get('page') || 1);
 
-      const total = db.discussion.count({
+      let allDiscussions = db.discussion.findMany({
         where: {
           teamId: {
             equals: user?.teamId,
@@ -37,31 +101,22 @@ export const discussionsHandlers = [
         },
       });
 
+      if (searchQuery) {
+        const lowerQuery = searchQuery.toLowerCase();
+        allDiscussions = allDiscussions.filter(
+          (d) =>
+            d.title.toLowerCase().includes(lowerQuery) ||
+            d.body.toLowerCase().includes(lowerQuery),
+        );
+      }
+
+      const total = allDiscussions.length;
       const totalPages = Math.ceil(total / 10);
 
-      const result = db.discussion
-        .findMany({
-          where: {
-            teamId: {
-              equals: user?.teamId,
-            },
-          },
-          take: 10,
-          skip: 10 * (page - 1),
-        })
-        .map(({ authorId, ...discussion }) => {
-          const author = db.user.findFirst({
-            where: {
-              id: {
-                equals: authorId,
-              },
-            },
-          });
-          return {
-            ...discussion,
-            author: author ? sanitizeUser(author) : {},
-          };
-        });
+      const result = allDiscussions
+        .slice(10 * (page - 1), 10 * page)
+        .map(mapDiscussionWithAuthor);
+
       return HttpResponse.json({
         data: result,
         meta: {

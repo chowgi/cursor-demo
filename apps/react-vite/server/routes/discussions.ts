@@ -7,6 +7,14 @@ import {
   serializeDiscussionRead,
   serializeDiscussionWrite,
 } from '../serialize';
+import {
+  countDiscussionsByTextFallback,
+  findDiscussionsByTextFallback,
+} from '../search/discussions-search-fallback';
+import {
+  buildDiscussionSearchPipeline,
+  buildDiscussionSuggestionsPipeline,
+} from '../search/discussions-search-pipelines';
 import type { DiscussionDocument } from '../types';
 
 type DiscussionBody = {
@@ -26,24 +34,92 @@ discussionsRouter.get('/discussions', async (req, res) => {
       return;
     }
 
+    const searchQuery = (req.query.q as string | undefined)?.trim();
+    const isSuggestions = req.query.suggestions === 'true';
+
+    if (isSuggestions) {
+      if (!searchQuery || searchQuery.length < 2) {
+        res.json({ data: [] });
+        return;
+      }
+
+      const discussions = getDiscussionsCollection();
+      const pipeline = buildDiscussionSuggestionsPipeline({
+        searchQuery,
+        teamId: user!.teamId,
+      });
+
+      let result = await discussions.aggregate(pipeline).toArray();
+
+      if (result.length === 0) {
+        result = await findDiscussionsByTextFallback({
+          collection: discussions,
+          searchQuery,
+          teamId: user!.teamId,
+          limit: 5,
+        });
+      }
+
+      res.json({
+        data: result.map(serializeDiscussionRead),
+      });
+      return;
+    }
+
     const page = Number(req.query.page ?? 1);
     const discussions = getDiscussionsCollection();
-    const filter = { teamId: user!.teamId };
 
-    const total = await discussions.countDocuments(filter);
-    const totalPages = Math.ceil(total / PAGE_SIZE);
+    if (searchQuery) {
+      const pipeline = buildDiscussionSearchPipeline({
+        searchQuery,
+        teamId: user!.teamId,
+        page,
+        pageSize: PAGE_SIZE,
+      });
 
-    const result = await discussions
-      .find(filter)
-      .sort({ createdAt: -1 })
-      .skip(PAGE_SIZE * (page - 1))
-      .limit(PAGE_SIZE)
-      .toArray();
+      const [facetResult] = await discussions.aggregate(pipeline).toArray();
+      let total = facetResult.metadata[0]?.total ?? 0;
+      let result = facetResult.data;
 
-    res.json({
-      data: result.map(serializeDiscussionRead),
-      meta: { page, total, totalPages },
-    });
+      if (total === 0) {
+        total = await countDiscussionsByTextFallback({
+          collection: discussions,
+          searchQuery,
+          teamId: user!.teamId,
+        });
+        result = await findDiscussionsByTextFallback({
+          collection: discussions,
+          searchQuery,
+          teamId: user!.teamId,
+          limit: PAGE_SIZE,
+          skip: PAGE_SIZE * (page - 1),
+        });
+      }
+
+      const totalPages = Math.ceil(total / PAGE_SIZE);
+
+      res.json({
+        data: result.map(serializeDiscussionRead),
+        meta: { page, total, totalPages },
+      });
+    } else {
+      const filter = { teamId: user!.teamId };
+
+      const total = await discussions.countDocuments(filter);
+      const totalPages = Math.ceil(total / PAGE_SIZE);
+
+      const result = await discussions
+        .find(filter)
+        .sort({ createdAt: -1 })
+        .skip(PAGE_SIZE * (page - 1))
+        .limit(PAGE_SIZE)
+        .toArray();
+
+      res.json({
+        data: result.map(serializeDiscussionRead),
+        meta: { page, total, totalPages },
+      });
+    }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Server Error';
     res.status(500).json({ message });
@@ -58,9 +134,19 @@ discussionsRouter.get('/discussions/:discussionId', async (req, res) => {
       return;
     }
 
+    const discussionId = req.params.discussionId;
+
+    if (discussionId === 'suggestions') {
+      res.status(400).json({
+        message:
+          'Use GET /discussions?suggestions=true&q=<query> for search suggestions',
+      });
+      return;
+    }
+
     const discussions = getDiscussionsCollection();
     const discussion = await discussions.findOne({
-      _id: req.params.discussionId,
+      _id: discussionId,
       teamId: user!.teamId,
     });
 

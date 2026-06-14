@@ -16,7 +16,10 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "run-mock-server": "vite-node mock-server.ts | pino-pretty -c",
-    "dev:server": "vite-node server/index.ts | pino-pretty -c"
+    "dev:server": "vite-node --watch server/index.ts | pino-pretty -c",
+    "search:create-index": "vite-node scripts/create-search-index.ts",
+    "search:check-index": "vite-node scripts/check-search-index.ts",
+    "search:update-index": "vite-node scripts/update-search-index.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",

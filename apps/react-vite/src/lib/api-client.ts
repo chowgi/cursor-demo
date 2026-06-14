@@ -24,11 +24,15 @@ api.interceptors.response.use(
   },
   (error) => {
     const message = error.response?.data?.message || error.message;
-    useNotifications.getState().addNotification({
-      type: 'error',
-      title: 'Error',
-      message,
-    });
+    const skipErrorNotification = error.config?.skipErrorNotification;
+
+    if (!skipErrorNotification) {
+      useNotifications.getState().addNotification({
+        type: 'error',
+        title: 'Error',
+        message,
+      });
+    }
 
     if (error.response?.status === 401) {
       const searchParams = new URLSearchParams();
