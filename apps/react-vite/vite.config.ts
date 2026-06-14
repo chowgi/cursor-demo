@@ -19,6 +19,10 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/testing/setup-tests.ts',
     exclude: ['**/node_modules/**', '**/e2e/**'],
+    fileParallelism: false,
+    env: {
+      VITE_APP_API_URL: 'http://localhost:8081/api',
+    },
     coverage: {
       include: ['src/**'],
     },
@@ -26,7 +30,6 @@ export default defineConfig({
   optimizeDeps: { exclude: ['fsevents'] },
   build: {
     rollupOptions: {
-      external: ['fs/promises'],
       output: {
         experimentalMinChunkSize: 3500,
       },

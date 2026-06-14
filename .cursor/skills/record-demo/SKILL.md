@@ -12,7 +12,7 @@ Produce a screen recording that **visually proves** fuzzy typo search works. A v
 
 ## Workflow (do not skip steps)
 
-1. Use **start-demo** skill — app must be running with MSW + demo seed
+1. Use **start-demo** skill — app must be running with MongoDB API + demo seed (`MONGODB_URI`, `ENABLE_DEMO_SEEDING=true`)
 2. **Rehearse first** — run through the demo flow and verify every selector/assertion passes before recording
 3. **Record** with slow typing and pauses (see Recording method)
 4. Verify post-recording checklist below
@@ -29,21 +29,18 @@ Produce a screen recording that **visually proves** fuzzy typo search works. A v
 
 ## Prerequisites
 
-`.env` in `apps/react-vite` (do not commit):
+1. Use the **start-demo** skill if the app is not running (requires `MONGODB_URI` and demo seed via `ENABLE_DEMO_SEEDING=true`)
+2. Atlas Search index must exist for autocomplete — see `apps/react-vite/SEARCH_SETUP.md`. Fuzzy typo matching (`desgn` → design) requires `fuzzy: { maxEdits: 2 }` on the index; regex fallback covers basic text search without Atlas.
+3. Cloud agents: save video to `/opt/cursor/artifacts/videos/fuzzy-search-discussions-demo.webm`
 
-```env
-VITE_APP_ENABLE_API_MOCKING=true
-VITE_APP_ENABLE_DEMO_SEEDING=true
-```
-
-Cloud agents: save video to `/opt/cursor/artifacts/videos/fuzzy-search-discussions-demo.webm`
+Do not commit `.env`.
 
 ## Recording method
 
 ```bash
 cd apps/react-vite
 npx playwright install chromium   # first run only
-yarn dev --port 3000 --host 127.0.0.1   # background, MSW mode
+# Ensure yarn dev:server and yarn dev are running (start-demo skill)
 ```
 
 Use Playwright with:

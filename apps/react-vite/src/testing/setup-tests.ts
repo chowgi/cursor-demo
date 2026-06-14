@@ -1,13 +1,21 @@
 import '@testing-library/jest-dom/vitest';
 
-import { initializeDb, resetDb } from '@/testing/mocks/db';
-import { server } from '@/testing/mocks/server';
+import Cookies from 'js-cookie';
+
+import { AUTH_COOKIE } from '../../server/auth';
+import { startTestServer, stopTestServer } from '@/testing/test-server';
 
 vi.mock('zustand');
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
-afterAll(() => server.close());
-beforeEach(() => {
+beforeAll(async () => {
+  await startTestServer();
+}, 60_000);
+
+afterAll(async () => {
+  await stopTestServer();
+});
+
+beforeEach(async () => {
   const ResizeObserverMock = vi.fn(() => ({
     observe: vi.fn(),
     unobserve: vi.fn(),
@@ -19,9 +27,10 @@ beforeEach(() => {
   window.btoa = (str: string) => Buffer.from(str, 'binary').toString('base64');
   window.atob = (str: string) => Buffer.from(str, 'base64').toString('binary');
 
-  initializeDb();
-});
-afterEach(() => {
-  server.resetHandlers();
-  resetDb();
+  Object.defineProperty(window, 'location', {
+    value: new URL('http://localhost:3000/'),
+    writable: true,
+  });
+
+  Cookies.remove(AUTH_COOKIE);
 });

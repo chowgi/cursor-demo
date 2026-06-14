@@ -29,8 +29,6 @@ The application contains the following models:
 
 ## Get Started
 
-To get started, check the README.md file in the application you want to run.
+To get started, check the README in the react-vite app:
 
 - [React Vite](../apps/react-vite/README.md)
-- [Next.js App Router](../apps/nextjs-app/README.md)
-- [Next.js Pages](../apps/nextjs-pages/README.md)

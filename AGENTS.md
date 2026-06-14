@@ -2,11 +2,7 @@
 
 ## Project Overview
 
-Bulletproof React is a scalable React application architecture that provides opinionated guidelines and best practices for building production-ready React applications. The project includes three different implementations:
-
-- **React Vite**: Modern Vite-based React application
-- **Next.js App Router**: Next.js 13+ with App Router
-- **Next.js Pages**: Traditional Next.js with Pages Router
+Bulletproof React is a scalable React application architecture that provides opinionated guidelines and best practices for building production-ready React applications. This repo ships a **React Vite** demo app with a MongoDB-backed Express API.
 
 ### Application Domain
 The demo application is a team collaboration platform where users can:
@@ -20,20 +16,23 @@ The demo application is a team collaboration platform where users can:
 ## Setup Commands
 
 ```bash
-# Navigate to desired app
-cd apps/react-vite        # or apps/nextjs-app or apps/nextjs-pages
+# Navigate to the app
+cd apps/react-vite
 
 # Install dependencies
 yarn install
 
-# Start development server
+# Start API server (requires MONGODB_URI in .env)
+yarn dev:server
+
+# Start frontend (separate terminal)
 yarn dev
 
 # Run tests
 yarn test
 
 # Run e2e tests
-yarn test:e2e
+yarn test-e2e
 
 # Lint code
 yarn lint
@@ -116,7 +115,7 @@ src/features/awesome-feature/
 
 ### Server State
 - **React Query (TanStack Query)** for all server state management
-- **MSW (Mock Service Worker)** for API mocking during development
+- **Express + MongoDB API** (`apps/react-vite/server`) for development and production
 - Separate fetcher functions from hooks
 
 ### Form State
@@ -158,11 +157,11 @@ export const useDiscussions = (params: GetDiscussionsParams) => {
 - **Vitest** - Test runner (Jest-compatible but faster)
 - **Testing Library** - Component testing utilities
 - **Playwright** - E2E testing framework
-- **MSW** - API mocking for tests
+- **MongoDB Atlas** - Shared database for development, Vitest integration tests, and E2E (via `MONGODB_URI`)
 
 ### Testing Patterns
 - Test behavior, not implementation details
-- Use real HTTP requests with MSW instead of mocking fetch
+- Use real HTTP requests against the Express API instead of mocking fetch
 - Focus on user interactions and outcomes
 
 ## Security Considerations
@@ -262,7 +261,7 @@ export const useDiscussions = (params: GetDiscussionsParams) => {
 ### Testing & Development
 - **Vitest** for unit/integration tests
 - **Playwright** for E2E tests
-- **MSW** for API mocking
+- **MongoDB Atlas** via `MONGODB_URI` for integration and E2E test database
 - **Storybook** for component development
 
 ## Common Patterns

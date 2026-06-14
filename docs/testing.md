@@ -16,11 +16,19 @@ Integration testing checks how different parts of your application work together
 
 [Integration Test Example Code](../apps/react-vite/src/app/routes/app/discussions/__tests__/discussion.test.tsx)
 
+Integration tests in the react-vite app run against the real Express API backed by MongoDB Atlas (via `MONGODB_URI` in `.env`). Test helpers seed data directly into MongoDB and components make actual HTTP requests via Axios.
+
+[Test Server Setup Example Code](../apps/react-vite/src/testing/test-server.ts)
+
+[Test Utilities Example Code](../apps/react-vite/src/testing/test-utils.tsx)
+
 ### E2E
 
 End-to-End Testing is a method that evaluates an application as a whole. These tests involve automating the complete application, including both the frontend and backend, to confirm that the entire system functions correctly. End-to-End tests simulate how a user would interact with the application.
 
 [E2E Example Code](../apps/react-vite/e2e/tests/smoke.spec.ts)
+
+Playwright starts both the Vite dev server and the MongoDB API server (using `MONGODB_URI`) before running E2E specs.
 
 ## Recommended Tooling:
 
@@ -40,14 +48,12 @@ You define all the commands a real world user would execute when using the app a
 - Browser mode - it will open a dedicated browser and run your application from start to finish. You get a nice set of tools to visualize and inspect your application on each step. Since this is a more expensive option, you want to run it only locally when developing the application.
 - Headless mode - it will start a headless browser and run your application. Very useful for integrating with CI/CD to run it on every deploy.
 
-#### [MSW](https://mswjs.io)
+#### MongoDB API (`apps/react-vite/server`)
 
-For prototyping the API use msw, which is a great tool for quickly creating frontends without worrying about servers. It is not an actual backend, but a mocked server inside a service worker that intercepts all HTTP requests and returns desired responses based on the handlers you define. This is especially useful if you only have access to the frontend and are blocked by some not implemented features on the backend. This way, you will not be forced to wait for the feature to be completed or hardcode response data in the code, but use actual HTTP calls to build frontend features.
+The react-vite app uses a real Express + MongoDB API for development, testing, and E2E. Set `MONGODB_URI` in `.env` to point at Atlas or another MongoDB deployment.
 
-It can be used for designing API endpoints. The business logic of the mocked API can be created in its handlers.
+[API Routes Example Code](../apps/react-vite/server/routes/auth.ts)
 
-[API Handlers Example Code](../apps/react-vite/src/testing/mocks/handlers/auth.ts)
+[Server App Factory Example Code](../apps/react-vite/server/app.ts)
 
-[Data Models Example Code](../apps/react-vite/src/testing/mocks/db.ts)
-
-Having a fully functional mocked API server is also handy when it comes to testing, you don't have to mock fetch, but make requests to the mocked server instead with the data your application would expect.
+Having a real API server means tests exercise the same routes, auth cookies, and serialization logic as production rather than a parallel mock implementation.

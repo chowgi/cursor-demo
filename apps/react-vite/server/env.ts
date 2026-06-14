@@ -11,9 +11,19 @@ const required = (key: string): string => {
 };
 
 export const serverEnv = {
-  MONGODB_URI: required('MONGODB_URI'),
-  APP_URL: process.env.APP_URL ?? 'http://localhost:3000',
-  APP_MOCK_API_PORT: Number(process.env.APP_MOCK_API_PORT ?? 8080),
-  ENABLE_DEMO_SEEDING: process.env.ENABLE_DEMO_SEEDING !== 'false',
-  DATABASE_NAME: 'cursor-demo',
+  get MONGODB_URI(): string {
+    return required('MONGODB_URI');
+  },
+  get APP_URL(): string {
+    return process.env.APP_URL ?? 'http://localhost:3000';
+  },
+  get APP_MOCK_API_PORT(): number {
+    return Number(process.env.APP_MOCK_API_PORT ?? 8080);
+  },
+  get ENABLE_DEMO_SEEDING(): boolean {
+    return process.env.ENABLE_DEMO_SEEDING !== 'false';
+  },
+  get DATABASE_NAME(): string {
+    return process.env.DATABASE_NAME ?? 'cursor-demo';
+  },
 };
