@@ -6,7 +6,6 @@
 # Bulletproof React 🛡️ ⚛️
 
 [![MIT License](https://img.shields.io/github/license/alan2207/bulletproof-react)](https://github.com/alan2207/bulletproof-react/blob/master/LICENSE)
-[![React Vite CI](https://github.com/chowgi/cursor-demo/actions/workflows/react-vite-ci.yml/badge.svg)](https://github.com/chowgi/cursor-demo/actions/workflows/react-vite-ci.yml)
 
 A simple, scalable, and powerful architecture for building production ready React applications.
 
