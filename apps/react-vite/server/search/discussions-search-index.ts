@@ -3,7 +3,8 @@
  *
  * Per MongoDB docs, autocomplete fields need edgeGram tokenization with
  * minGrams/maxGrams for prefix prediction. Title is indexed as both string
- * (full-text) and autocomplete (typeahead).
+ * (full-text) and autocomplete (typeahead). Fuzzy matching is applied at
+ * query time via the autocomplete/text `fuzzy` option (maxEdits: 1).
  *
  * @see https://www.mongodb.com/docs/atlas/atlas-search/autocomplete/
  */

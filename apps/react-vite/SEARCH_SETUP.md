@@ -111,22 +111,31 @@ The `GET /discussions` endpoint accepts an optional `q` query parameter:
 GET /discussions?q=design&page=1
 ```
 
-When a search query is provided, it uses MongoDB's `$search` aggregation stage:
+When a search query is provided, it uses MongoDB's `$search` aggregation stage with **fuzzy autocomplete** on `title` and fuzzy text search on `body`:
 
 ```javascript
 {
   $search: {
     index: 'discussions_search',
     compound: {
-      must: [
+      should: [
         {
           autocomplete: {
             query: searchQuery,
             path: 'title',
-            fuzzy: { maxEdits: 2 }
+            tokenOrder: 'any',
+            fuzzy: { maxEdits: 1, prefixLength: 1 }
+          }
+        },
+        {
+          text: {
+            query: searchQuery,
+            path: 'body',
+            fuzzy: { maxEdits: 1 }
           }
         }
       ],
+      minimumShouldMatch: 1,
       filter: [
         {
           text: {
@@ -140,6 +149,8 @@ When a search query is provided, it uses MongoDB's `$search` aggregation stage:
 }
 ```
 
+Typo example: `desgn` still matches **Design review for dashboard refresh** via Atlas fuzzy autocomplete.
+
 ### Frontend (React/React Query)
 
 The search state is managed via URL query parameters:
@@ -152,8 +163,8 @@ const { data } = useDiscussions({ q: searchQuery, page })
 
 ### Features
 
-- **Autocomplete**: Matches partial words as you type
-- **Fuzzy matching**: Tolerates up to 2 character typos
+- **Autocomplete**: Matches partial words as you type (with fuzzy typo tolerance)
+- **Fuzzy matching**: Tolerates up to 1 character edit on autocomplete and text search (`maxEdits: 1`)
 - **Team scoping**: Only shows discussions from your team
 - **Pagination**: Results are paginated (10 per page)
 - **Fallback**: Works without search (shows all discussions)

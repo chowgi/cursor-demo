@@ -1,4 +1,5 @@
 import { DISCUSSIONS_SEARCH_INDEX_NAME } from './discussions-search-index';
+import { DISCUSSIONS_SEARCH_FUZZY } from './discussions-search-config';
 
 const SUGGESTION_LIMIT = 5;
 
@@ -22,8 +23,25 @@ const teamFilter = (teamId: string) => ({
   },
 });
 
+const titleAutocompleteClause = (searchQuery: string) => ({
+  autocomplete: {
+    query: searchQuery,
+    path: 'title',
+    tokenOrder: 'any',
+    fuzzy: DISCUSSIONS_SEARCH_FUZZY,
+  },
+});
+
+const titleBodyTextClause = (searchQuery: string, paths: string | string[]) => ({
+  text: {
+    query: searchQuery,
+    path: paths,
+    fuzzy: { maxEdits: DISCUSSIONS_SEARCH_FUZZY.maxEdits },
+  },
+});
+
 /**
- * Typeahead suggestions: title prefix (autocomplete) + text match on title/body.
+ * Typeahead suggestions: fuzzy autocomplete on title + fuzzy text on title/body.
  */
 export const buildDiscussionSuggestionsPipeline = ({
   searchQuery,
@@ -35,19 +53,8 @@ export const buildDiscussionSuggestionsPipeline = ({
       index: DISCUSSIONS_SEARCH_INDEX_NAME,
       compound: {
         should: [
-          {
-            autocomplete: {
-              query: searchQuery,
-              path: 'title',
-              tokenOrder: 'any',
-            },
-          },
-          {
-            text: {
-              query: searchQuery,
-              path: ['title', 'body'],
-            },
-          },
+          titleAutocompleteClause(searchQuery),
+          titleBodyTextClause(searchQuery, ['title', 'body']),
         ],
         minimumShouldMatch: 1,
         filter: [teamFilter(teamId)],
@@ -63,7 +70,7 @@ export const buildDiscussionSuggestionsPipeline = ({
 ];
 
 /**
- * Full search pipeline for the discussions list (title prefix + body text).
+ * Full search pipeline for the discussions list (fuzzy title autocomplete + body text).
  */
 export const buildDiscussionSearchPipeline = ({
   searchQuery,
@@ -76,19 +83,8 @@ export const buildDiscussionSearchPipeline = ({
       index: DISCUSSIONS_SEARCH_INDEX_NAME,
       compound: {
         should: [
-          {
-            autocomplete: {
-              query: searchQuery,
-              path: 'title',
-              tokenOrder: 'any',
-            },
-          },
-          {
-            text: {
-              query: searchQuery,
-              path: 'body',
-            },
-          },
+          titleAutocompleteClause(searchQuery),
+          titleBodyTextClause(searchQuery, 'body'),
         ],
         minimumShouldMatch: 1,
         filter: [teamFilter(teamId)],
