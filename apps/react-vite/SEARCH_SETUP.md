@@ -118,15 +118,24 @@ When a search query is provided, it uses MongoDB's `$search` aggregation stage:
   $search: {
     index: 'discussions_search',
     compound: {
-      must: [
+      should: [
         {
           autocomplete: {
             query: searchQuery,
             path: 'title',
-            fuzzy: { maxEdits: 2 }
+            tokenOrder: 'any',
+            fuzzy: { maxEdits: 1 }
+          }
+        },
+        {
+          text: {
+            query: searchQuery,
+            path: 'body',
+            fuzzy: { maxEdits: 1 }
           }
         }
       ],
+      minimumShouldMatch: 1,
       filter: [
         {
           text: {
@@ -153,7 +162,7 @@ const { data } = useDiscussions({ q: searchQuery, page })
 ### Features
 
 - **Autocomplete**: Matches partial words as you type
-- **Fuzzy matching**: Tolerates up to 2 character typos
+- **Fuzzy matching**: Tolerates up to 1 character typo (e.g., "desgn" matches "design")
 - **Team scoping**: Only shows discussions from your team
 - **Pagination**: Results are paginated (10 per page)
 - **Fallback**: Works without search (shows all discussions)

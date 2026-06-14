@@ -24,15 +24,61 @@ const filterDiscussionsByTeam = (teamId: string | undefined) =>
     },
   });
 
-const matchesTitlePrefix = (title: string, query: string) => {
-  const lowerQuery = query.toLowerCase();
-  const lowerTitle = title.toLowerCase();
+const levenshteinDistance = (a: string, b: string): number => {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
 
-  if (lowerTitle.startsWith(lowerQuery)) {
+  const matrix: number[][] = [];
+
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1,
+        );
+      }
+    }
+  }
+
+  return matrix[b.length][a.length];
+};
+
+const fuzzyMatches = (text: string, query: string, maxEdits = 1): boolean => {
+  const lowerText = text.toLowerCase();
+  const lowerQuery = query.toLowerCase();
+
+  if (lowerText.includes(lowerQuery)) {
     return true;
   }
 
-  return lowerTitle.split(/\s+/).some((word) => word.startsWith(lowerQuery));
+  const words = lowerText.split(/\s+/);
+  return words.some((word) => {
+    if (word.startsWith(lowerQuery)) {
+      return true;
+    }
+
+    if (Math.abs(word.length - lowerQuery.length) > maxEdits) {
+      return false;
+    }
+
+    return levenshteinDistance(word, lowerQuery) <= maxEdits;
+  });
+};
+
+const matchesTitlePrefix = (title: string, query: string) => {
+  return fuzzyMatches(title, query, 1);
 };
 
 const mapDiscussionWithAuthor = (discussion: {
@@ -77,13 +123,11 @@ export const discussionsHandlers = [
           return HttpResponse.json({ data: [] });
         }
 
-        const lowerQuery = searchQuery.toLowerCase();
         const suggestions = filterDiscussionsByTeam(user?.teamId)
           .filter(
             (discussion) =>
-              discussion.title.toLowerCase().includes(lowerQuery) ||
-              discussion.body.toLowerCase().includes(lowerQuery) ||
-              matchesTitlePrefix(discussion.title, searchQuery),
+              fuzzyMatches(discussion.title, searchQuery, 1) ||
+              fuzzyMatches(discussion.body, searchQuery, 1),
           )
           .slice(0, 5)
           .map(mapDiscussionWithAuthor);
@@ -102,11 +146,10 @@ export const discussionsHandlers = [
       });
 
       if (searchQuery) {
-        const lowerQuery = searchQuery.toLowerCase();
         allDiscussions = allDiscussions.filter(
           (d) =>
-            d.title.toLowerCase().includes(lowerQuery) ||
-            d.body.toLowerCase().includes(lowerQuery),
+            fuzzyMatches(d.title, searchQuery, 1) ||
+            fuzzyMatches(d.body, searchQuery, 1),
         );
       }
 

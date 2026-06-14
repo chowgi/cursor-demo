@@ -40,12 +40,18 @@ export const buildDiscussionSuggestionsPipeline = ({
               query: searchQuery,
               path: 'title',
               tokenOrder: 'any',
+              fuzzy: {
+                maxEdits: 1,
+              },
             },
           },
           {
             text: {
               query: searchQuery,
               path: ['title', 'body'],
+              fuzzy: {
+                maxEdits: 1,
+              },
             },
           },
         ],
@@ -81,12 +87,18 @@ export const buildDiscussionSearchPipeline = ({
               query: searchQuery,
               path: 'title',
               tokenOrder: 'any',
+              fuzzy: {
+                maxEdits: 1,
+              },
             },
           },
           {
             text: {
               query: searchQuery,
               path: 'body',
+              fuzzy: {
+                maxEdits: 1,
+              },
             },
           },
         ],

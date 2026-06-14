@@ -94,3 +94,62 @@ test(
     ).not.toBeInTheDocument();
   },
 );
+
+test(
+  'should support fuzzy search matching with typos',
+  { timeout: 10000 },
+  async () => {
+    await renderApp(<DiscussionsRoute />);
+
+    const discussion = createDiscussion({
+      title: 'Design review for dashboard refresh',
+      body: 'We need to review the new design for the dashboard',
+    });
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /create discussion/i }),
+    );
+
+    const drawer = await screen.findByRole('dialog', {
+      name: /create discussion/i,
+    });
+
+    const titleField = within(drawer).getByText(/title/i);
+    const bodyField = within(drawer).getByText(/body/i);
+
+    await userEvent.type(titleField, discussion.title);
+    await userEvent.type(bodyField, discussion.body);
+
+    const submitButton = within(drawer).getByRole('button', {
+      name: /submit/i,
+    });
+
+    await userEvent.click(submitButton);
+
+    await waitFor(() => expect(drawer).not.toBeInTheDocument());
+
+    await screen.findByRole('row', {
+      name: `${discussion.title} ${formatDate(discussion.createdAt)} View Delete Discussion`,
+    });
+
+    const searchInput = screen.getByRole('combobox', {
+      name: /search discussions/i,
+    });
+
+    await userEvent.type(searchInput, 'desgn');
+
+    const searchButton = screen.getByRole('button', { name: /submit search/i });
+    await userEvent.click(searchButton);
+
+    await waitFor(
+      async () => {
+        const rows = await screen.findAllByRole('row');
+        const discussionRow = rows.find((row) =>
+          within(row).queryByText(discussion.title),
+        );
+        expect(discussionRow).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
+  },
+);
