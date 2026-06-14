@@ -8,6 +8,10 @@ import {
   serializeDiscussionWrite,
 } from '../serialize';
 import {
+  countDiscussionsByTextFallback,
+  findDiscussionsByTextFallback,
+} from '../search/discussions-search-fallback';
+import {
   buildDiscussionSearchPipeline,
   buildDiscussionSuggestionsPipeline,
 } from '../search/discussions-search-pipelines';
@@ -45,7 +49,16 @@ discussionsRouter.get('/discussions', async (req, res) => {
         teamId: user!.teamId,
       });
 
-      const result = await discussions.aggregate(pipeline).toArray();
+      let result = await discussions.aggregate(pipeline).toArray();
+
+      if (result.length === 0) {
+        result = await findDiscussionsByTextFallback({
+          collection: discussions,
+          searchQuery,
+          teamId: user!.teamId,
+          limit: 5,
+        });
+      }
 
       res.json({
         data: result.map(serializeDiscussionRead),
@@ -65,9 +78,25 @@ discussionsRouter.get('/discussions', async (req, res) => {
       });
 
       const [facetResult] = await discussions.aggregate(pipeline).toArray();
-      const total = facetResult.metadata[0]?.total ?? 0;
+      let total = facetResult.metadata[0]?.total ?? 0;
+      let result = facetResult.data;
+
+      if (total === 0) {
+        total = await countDiscussionsByTextFallback({
+          collection: discussions,
+          searchQuery,
+          teamId: user!.teamId,
+        });
+        result = await findDiscussionsByTextFallback({
+          collection: discussions,
+          searchQuery,
+          teamId: user!.teamId,
+          limit: PAGE_SIZE,
+          skip: PAGE_SIZE * (page - 1),
+        });
+      }
+
       const totalPages = Math.ceil(total / PAGE_SIZE);
-      const result = facetResult.data;
 
       res.json({
         data: result.map(serializeDiscussionRead),
