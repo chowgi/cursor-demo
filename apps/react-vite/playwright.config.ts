@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 3000;
+const BASE_URL = `http://localhost:${PORT}`;
 
 /**
  * Read environment variables from file.
@@ -25,24 +26,40 @@ export default defineConfig({
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    // baseURL: 'http://127.0.0.1:3000',
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    baseURL: BASE_URL,
     trace: 'on-first-retry',
   },
 
   /* Configure projects for major browsers */
   projects: [
-    { name: 'setup', testMatch: /.*\.setup\.ts/ },
+    { name: 'setup', testMatch: /.*auth\.setup\.ts/ },
+    {
+      name: 'admin-setup',
+      testMatch: /.*admin-auth\.setup\.ts/,
+    },
     {
       name: 'chromium',
       testMatch: /.*\.spec\.ts/,
+      testIgnore: /discussions-search\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'e2e/.auth/user.json',
       },
       dependencies: ['setup'],
+    },
+    {
+      name: 'discussions-search-recording',
+      testMatch: /discussions-search\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/admin.json',
+        video: 'on',
+        viewport: { width: 1280, height: 720 },
+        launchOptions: {
+          slowMo: 100,
+        },
+      },
+      dependencies: ['admin-setup'],
     },
   ],
 
