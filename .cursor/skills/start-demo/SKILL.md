@@ -8,22 +8,22 @@ disable-model-invocation: true
 
 # Start cursor-demo app
 
-Start the react-vite frontend and, when API mocking is off, the MongoDB Express API server.
+Start the react-vite frontend and MongoDB Express API server.
 
 ## Pre-flight
 
-Read `apps/react-vite/.env` (or `.env.example` if missing) to determine mode:
+Read `apps/react-vite/.env` (or `.env.example` if missing).
 
-| `VITE_APP_ENABLE_API_MOCKING` | API source | Servers needed |
-|-------------------------------|------------|----------------|
-| `false` (default) | `yarn dev:server` → `:8080` | **Both** `:8080` + `:3000` |
-| `true` | MSW in browser | `:3000` only |
+Requires `MONGODB_URI` in `.env`. Do not commit `.env`.
 
-Requires `MONGODB_URI` in `.env` when mocking is off. Do not commit `.env`.
+Both servers are required:
+
+- **API:** `yarn dev:server` → `:8080`
+- **Frontend:** `yarn dev` → `:3000`
 
 ## Steps
 
-1. **Check `:8080`** (skip if mocking is on):
+1. **Check `:8080`**:
    - `curl -s http://localhost:8080/api/healthcheck` — expect `{"ok":true}`
    - If down, run in background: `cd apps/react-vite && yarn dev:server`
    - Wait for log: `MongoDB API server started at http://localhost:8080/api`
@@ -33,13 +33,13 @@ Requires `MONGODB_URI` in `.env` when mocking is off. Do not commit `.env`.
    - If down, run in background: `cd apps/react-vite && yarn dev`
    - Wait for log: `ready in`
 
-3. **Verify** (when mocking is off):
+3. **Verify**:
    - `curl -s http://localhost:8080/api/healthcheck` → `{ ok: true }`
    - If API fails with missing `MONGODB_URI`, tell user to set it in `.env`
 
 4. **Report**:
    - Frontend: http://localhost:3000
-   - API (if running): http://localhost:8080/api
+   - API: http://localhost:8080/api
    - Admin login: `admin@demo.com` / `password123`
    - Discussions: http://localhost:3000/app/discussions
 

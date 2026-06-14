@@ -5,7 +5,7 @@ import {
   demoDiscussions,
   demoTeam,
   demoUsers,
-} from '../src/testing/mocks/seed-data';
+} from './seed-data';
 
 import { hash, toAuthorSnapshot } from './auth';
 import {

@@ -21,14 +21,8 @@ Produce a screen recording that proves fuzzy/typo search works end-to-end. Full 
 
 ## Prerequisites
 
-1. Use the **start-demo** skill if the app is not running
-2. For recordings without Atlas, use MSW + demo seed in `.env` (do not commit):
-
-```
-VITE_APP_ENABLE_API_MOCKING=true
-VITE_APP_ENABLE_DEMO_SEEDING=true
-```
-
+1. Use the **start-demo** skill if the app is not running (requires `MONGODB_URI` and demo seed via `ENABLE_DEMO_SEEDING=true`)
+2. Atlas Search index must exist for full autocomplete — see `apps/react-vite/SEARCH_SETUP.md`. Regex fallback still works for basic search without Atlas.
 3. Cloud agents: save video to `/opt/cursor/artifacts/videos/fuzzy-search-discussions-demo.webm`
 
 ## Record
@@ -36,7 +30,7 @@ VITE_APP_ENABLE_DEMO_SEEDING=true
 ```bash
 cd apps/react-vite
 npx playwright install chromium   # if needed
-yarn dev --port 3000 --host 127.0.0.1   # background, MSW mode
+# Ensure yarn dev:server and yarn dev are running (start-demo skill)
 # Record via Playwright (see Linear BEN-15) or yarn record:search-demo if that script exists on your branch
 ```
 

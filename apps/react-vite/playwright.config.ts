@@ -47,10 +47,18 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: `yarn dev --port ${PORT}`,
-    timeout: 10 * 1000,
-    port: PORT,
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: [
+    {
+      command: 'vite-node scripts/e2e-api-server.ts',
+      url: 'http://127.0.0.1:8080/api/healthcheck',
+      timeout: 120 * 1000,
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: `yarn dev --port ${PORT}`,
+      timeout: 120 * 1000,
+      port: PORT,
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
 });

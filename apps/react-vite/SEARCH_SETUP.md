@@ -194,8 +194,8 @@ const { data } = useDiscussions({ q: searchQuery, page })
 
 The search functionality includes:
 
-- **Unit tests**: MSW handlers simulate search filtering
-- **Integration tests**: Test the full search flow with mock data
+- **Integration tests**: Full search flow against the real Express API (in-memory MongoDB in Vitest)
+- **Regex fallback**: Works without Atlas Search when the index is unavailable
 - **Type checking**: TypeScript ensures type safety
 
 Run tests:
@@ -206,12 +206,11 @@ yarn test --run
 
 ## Environment Requirements
 
-Search will **only work** in these environments:
+Search behavior by environment:
 
-- ✅ MongoDB Atlas (M0 Free tier or higher)
-- ✅ Production deployment connected to Atlas
-- ❌ Local MongoDB (mongod)
-- ❌ MongoDB Community Server
-- ❌ MSW mock mode (uses simple text filtering instead)
+- ✅ **MongoDB Atlas** (M0+): Full Atlas Search autocomplete and fuzzy matching
+- ✅ **Vitest / E2E**: Regex fallback search via `server/search/discussions-search-fallback.ts`
+- ⚠️ **Local MongoDB** (non-Atlas): Regex fallback only — no autocomplete index
+- ❌ **MongoDB Community Server without `$search`**: Same as local — fallback regex matching
 
-For local development without Atlas, the app will work but search will be limited to the MSW mock implementation.
+For local development without Atlas, the app works with substring/regex search fallback until an Atlas Search index is configured.
