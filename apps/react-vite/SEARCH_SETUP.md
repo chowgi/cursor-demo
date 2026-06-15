@@ -126,13 +126,15 @@ When a search query is provided, it uses MongoDB's `$search` aggregation stage. 
           autocomplete: {
             query: searchQuery,
             path: 'title',
-            tokenOrder: 'any'
+            tokenOrder: 'any',
+            fuzzy: { maxEdits: 1 }
           }
         },
         {
           text: {
             query: searchQuery,
-            path: ['title', 'body']  // suggestions pipeline; list search uses path: 'body'
+            path: ['title', 'body'],  // suggestions pipeline; list search uses path: 'body'
+            fuzzy: { maxEdits: 1 }
           }
         }
       ],
@@ -165,7 +167,7 @@ const { data } = useDiscussions({ q: searchQuery, page })
 ### Features
 
 - **Autocomplete**: Prefix and text match on title (and body for suggestions) as you type
-- **Fuzzy matching (planned, BEN-11)**: Typo tolerance (e.g. `desgn` → "design") requires `fuzzy: { maxEdits: 1 }` on the `autocomplete` and `text` operators in the search pipelines — not yet implemented
+- **Fuzzy matching**: Typo tolerance (e.g. `desgn` → "design") via `fuzzy: { maxEdits: 1 }` on the `autocomplete` and `text` operators in `server/search/discussions-search-pipelines.ts` (query-time; no index change)
 - **Regex fallback**: Substring match when Atlas Search returns no hits; does **not** tolerate typos
 - **Team scoping**: Only shows discussions from your team
 - **Pagination**: Results are paginated (10 per page)
@@ -222,7 +224,7 @@ Requires `MONGODB_URI` in `.env` (same Atlas cluster as dev).
 
 Search behavior by environment:
 
-- ✅ **MongoDB Atlas** (M0+): Full Atlas Search autocomplete and text search; fuzzy matching after BEN-11 pipeline work
+- ✅ **MongoDB Atlas** (M0+): Full Atlas Search autocomplete, text search, and fuzzy typo matching
 - ✅ **Vitest / E2E**: Real Atlas via `MONGODB_URI`; regex fallback when `$search` returns empty
 - ⚠️ **Local MongoDB** (non-Atlas): Regex fallback only — no autocomplete index
 - ❌ **MongoDB Community Server without `$search`**: Same as local — fallback regex matching

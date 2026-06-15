@@ -19,7 +19,8 @@
     "search:create-index": "vite-node scripts/create-search-index.ts",
     "search:check-index": "vite-node scripts/check-search-index.ts",
     "search:update-index": "vite-node scripts/update-search-index.ts",
-    "verify:discussions-flow": "vite-node scripts/verify-discussions-flow.ts"
+    "verify:discussions-flow": "vite-node scripts/verify-discussions-flow.ts",
+    "record:fuzzy-search-demo": "vite-node scripts/record-fuzzy-search-demo.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",

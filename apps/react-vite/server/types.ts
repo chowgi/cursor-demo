@@ -47,4 +47,4 @@ export type CommentDocument = {
   createdAt: number;
 };
 
-export type SanitizedUser = Omit<UserDocument, 'password'> & { id: string };
+export type SanitizedUser = Omit<UserDocument, 'password' | '_id'> & { id: string };
