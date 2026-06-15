@@ -36,3 +36,7 @@ Enterprise engineering governance for this team. Follow these directives on ever
 
 - No `console.log` or `print` statements in committed code.
 - All environment-specific config must come from environment variables, never hardcoded.
+
+## AI-assisted changes
+
+Before opening a PR or handing off AI-assisted work, run `/de-slop` using the project skill at `.cursor/skills/de-slop/SKILL.md` to remove slop introduced on the branch.
