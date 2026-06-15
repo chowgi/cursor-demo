@@ -49,7 +49,7 @@ discussionsRouter.get('/discussions', async (req, res) => {
         teamId: user!.teamId,
       });
 
-      let result = await discussions.aggregate(pipeline).toArray();
+      let result = (await discussions.aggregate(pipeline).toArray()) as DiscussionDocument[];
 
       if (result.length === 0) {
         result = await findDiscussionsByTextFallback({

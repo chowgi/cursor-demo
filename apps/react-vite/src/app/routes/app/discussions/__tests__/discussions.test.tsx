@@ -136,3 +136,50 @@ test(
     });
   },
 );
+
+test(
+  'should match discussions with fuzzy typo search',
+  { timeout: 15000 },
+  async () => {
+    await renderApp(<DiscussionsRoute />, {
+      user: { email: 'admin@demo.com', password: DEMO_PASSWORD },
+      path: '/app/discussions',
+      url: '/app/discussions',
+    });
+
+    const searchInput = screen.getByRole('combobox', {
+      name: /search discussions/i,
+    });
+
+    await userEvent.type(searchInput, 'desgn');
+
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole('option', {
+            name: /design review for dashboard refresh/i,
+          }),
+        ).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /submit search/i }),
+    );
+
+    await screen.findByText(/showing results for:/i);
+    expect(screen.getByText('"desgn"')).toBeInTheDocument();
+
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole('cell', {
+            name: /design review for dashboard refresh/i,
+          }),
+        ).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
+  },
+);

@@ -135,7 +135,10 @@ const initializeUser = async (
   }
 
   if (user) {
-    return loginAsUser({ email: user.email, password: user.password });
+    return loginAsUser({
+      email: user.email ?? '',
+      password: user.password ?? '',
+    });
   }
 
   return null;
