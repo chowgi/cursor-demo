@@ -5,7 +5,8 @@ This document explains how to set up and verify the MongoDB Atlas Search functio
 ## Prerequisites
 
 - MongoDB Atlas cluster (M0 or higher)
-- `MONGODB_URI` environment variable set in `.env` file
+- `MONGODB_URI` environment variable set in `.env` file (cloud agents connect to Atlas directly — no mock backend)
+- `ENABLE_DEMO_SEEDING=true` in `.env` for the demo discussions dataset (do not commit `.env`)
 - Atlas Search is only available on Atlas clusters (not local MongoDB)
 
 ## Quick Setup
@@ -83,23 +84,25 @@ The `title` field uses **multi-type indexing** per MongoDB docs: `string` for fu
 
 ## Verify Search Works
 
-Once the index is ready, test the search:
+Once the index is ready, test the search. Cloud agents: use the **start-demo** skill (both servers required).
 
-1. Start the dev server:
+1. Start the API and frontend:
    ```bash
-   yarn dev:server
+   yarn dev:server   # :8080
+   yarn dev          # :3000
    ```
 
-2. Make a search request:
+2. Make a search request (API only):
    ```bash
    curl 'http://localhost:8080/api/discussions?q=design' \
      -H 'Cookie: token=YOUR_TOKEN'
    ```
 
 3. Or test in the browser:
+   - Log in as `admin@demo.com` / `password123`
    - Navigate to `/app/discussions`
-   - Type a search query in the search box
-   - Click "Search"
+   - Type a search query in the search box (e.g. `onboard` or `design`)
+   - Confirm autocomplete suggestions and filtered results
 
 ## How Search Works
 
@@ -111,22 +114,29 @@ The `GET /discussions` endpoint accepts an optional `q` query parameter:
 GET /discussions?q=design&page=1
 ```
 
-When a search query is provided, it uses MongoDB's `$search` aggregation stage:
+When a search query is provided, it uses MongoDB's `$search` aggregation stage. Pipelines live in `server/search/discussions-search-pipelines.ts`:
 
 ```javascript
 {
   $search: {
     index: 'discussions_search',
     compound: {
-      must: [
+      should: [
         {
           autocomplete: {
             query: searchQuery,
             path: 'title',
-            fuzzy: { maxEdits: 2 }
+            tokenOrder: 'any'
+          }
+        },
+        {
+          text: {
+            query: searchQuery,
+            path: ['title', 'body']  // suggestions pipeline; list search uses path: 'body'
           }
         }
       ],
+      minimumShouldMatch: 1,
       filter: [
         {
           text: {
@@ -140,6 +150,8 @@ When a search query is provided, it uses MongoDB's `$search` aggregation stage:
 }
 ```
 
+If Atlas Search returns no hits, the API falls back to case-insensitive regex substring matching via `server/search/discussions-search-fallback.ts`.
+
 ### Frontend (React/React Query)
 
 The search state is managed via URL query parameters:
@@ -152,11 +164,11 @@ const { data } = useDiscussions({ q: searchQuery, page })
 
 ### Features
 
-- **Autocomplete**: Matches partial words as you type
-- **Fuzzy matching**: Tolerates up to 2 character typos
+- **Autocomplete**: Prefix and text match on title (and body for suggestions) as you type
+- **Fuzzy matching (planned, BEN-11)**: Typo tolerance (e.g. `desgn` → "design") requires `fuzzy: { maxEdits: 1 }` on the `autocomplete` and `text` operators in the search pipelines — not yet implemented
+- **Regex fallback**: Substring match when Atlas Search returns no hits; does **not** tolerate typos
 - **Team scoping**: Only shows discussions from your team
 - **Pagination**: Results are paginated (10 per page)
-- **Fallback**: Works without search (shows all discussions)
 
 ## Troubleshooting
 
@@ -194,8 +206,8 @@ const { data } = useDiscussions({ q: searchQuery, page })
 
 The search functionality includes:
 
-- **Integration tests**: Full search flow against the real Express API (in-memory MongoDB in Vitest)
-- **Regex fallback**: Works without Atlas Search when the index is unavailable
+- **Integration tests**: Real Express API against MongoDB Atlas via `MONGODB_URI` and `src/testing/test-server.ts`
+- **Regex fallback**: Used when Atlas Search returns no hits (not a substitute for typo matching)
 - **Type checking**: TypeScript ensures type safety
 
 Run tests:
@@ -204,12 +216,14 @@ yarn check-types
 yarn test --run
 ```
 
+Requires `MONGODB_URI` in `.env` (same Atlas cluster as dev).
+
 ## Environment Requirements
 
 Search behavior by environment:
 
-- ✅ **MongoDB Atlas** (M0+): Full Atlas Search autocomplete and fuzzy matching
-- ✅ **Vitest / E2E**: Regex fallback search via `server/search/discussions-search-fallback.ts`
+- ✅ **MongoDB Atlas** (M0+): Full Atlas Search autocomplete and text search; fuzzy matching after BEN-11 pipeline work
+- ✅ **Vitest / E2E**: Real Atlas via `MONGODB_URI`; regex fallback when `$search` returns empty
 - ⚠️ **Local MongoDB** (non-Atlas): Regex fallback only — no autocomplete index
 - ❌ **MongoDB Community Server without `$search`**: Same as local — fallback regex matching
 
