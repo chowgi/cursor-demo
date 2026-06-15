@@ -3,7 +3,62 @@ export const DEMO_TEAM_ID = 'demo-team-acme';
 
 export const DEMO_PASSWORD = 'password123';
 
+export const DEMO_DISCUSSION_COUNT = 100;
+
 const BASE_TIMESTAMP = 1_700_000_000_000;
+
+type DemoDiscussionSeed = {
+  id: string;
+  title: string;
+  body: string;
+  authorId: (typeof demoUsers)[number]['id'];
+  teamId: typeof DEMO_TEAM_ID;
+  createdAt: number;
+};
+
+/**
+ * Tokens reserved for core demo fixtures — filler titles and bodies must not
+ * contain these (case-insensitive) so search demos resolve to canonical rows.
+ */
+export const DEMO_FILLER_RESERVED_TOKENS = [
+  'design',
+  'dashboard',
+  'onboard',
+  'versioning',
+  'release',
+  'checklist',
+  'retrospective',
+  'sprint',
+  'api',
+] as const;
+
+const containsReservedToken = (text: string): boolean =>
+  DEMO_FILLER_RESERVED_TOKENS.some((token) =>
+    text.toLowerCase().includes(token),
+  );
+
+const discussionTopics = [
+  'Roadmap planning',
+  'Iteration planning',
+  'Incident response',
+  'Performance tuning',
+  'Accessibility audit',
+  'Component library tokens',
+  'Contract review cadence',
+  'Database indexing',
+  'Ship readiness',
+  'Customer feedback triage',
+  'Security review',
+  'On-call handoff',
+  'Documentation cleanup',
+  'Feature flag rollout',
+  'Mobile responsiveness',
+  'Search relevance tuning',
+  'Caching strategy',
+  'Observability metrics',
+  'Team rituals',
+  'Hiring pipeline',
+] as const;
 
 export const demoTeam = {
   id: DEMO_TEAM_ID,
@@ -56,7 +111,7 @@ export const demoUsers = [
   },
 ] as const;
 
-export const demoDiscussions = [
+const coreDemoDiscussions = [
   {
     id: 'demo-discussion-onboarding',
     title: 'Improving new member onboarding',
@@ -92,12 +147,53 @@ export const demoDiscussions = [
   {
     id: 'demo-discussion-retrospective',
     title: 'Sprint retrospective notes',
-    body: 'What went well: faster PR reviews and fewer flaky tests. What to improve: earlier design alignment and clearer acceptance criteria.',
+    body: 'What went well: faster PR reviews and fewer flaky tests. What to improve: earlier product alignment and clearer acceptance criteria.',
     authorId: 'demo-user-admin',
     teamId: DEMO_TEAM_ID,
     createdAt: BASE_TIMESTAMP + 50_000,
   },
-] as const;
+] as const satisfies readonly DemoDiscussionSeed[];
+
+const buildGeneratedDemoDiscussions = (): DemoDiscussionSeed[] => {
+  const generated: DemoDiscussionSeed[] = [];
+
+  for (const topic of discussionTopics) {
+    if (containsReservedToken(topic)) {
+      throw new Error(
+        `Filler topic "${topic}" contains a reserved token from core fixtures`,
+      );
+    }
+  }
+
+  for (let index = coreDemoDiscussions.length + 1; index <= DEMO_DISCUSSION_COUNT; index += 1) {
+    const topic = discussionTopics[(index - 1) % discussionTopics.length];
+    const author = demoUsers[(index - 1) % demoUsers.length];
+    const title = `${topic} thread #${index}`;
+    const body = `Team discussion about ${topic.toLowerCase()}. Share updates, blockers, and decisions for the Acme Product Team.`;
+
+    if (containsReservedToken(title) || containsReservedToken(body)) {
+      throw new Error(
+        `Generated filler discussion #${index} contains a reserved token`,
+      );
+    }
+
+    generated.push({
+      id: `demo-discussion-${String(index).padStart(3, '0')}`,
+      title,
+      body,
+      authorId: author.id,
+      teamId: DEMO_TEAM_ID,
+      createdAt: BASE_TIMESTAMP + index * 10_000,
+    });
+  }
+
+  return generated;
+};
+
+export const demoDiscussions: DemoDiscussionSeed[] = [
+  ...coreDemoDiscussions,
+  ...buildGeneratedDemoDiscussions(),
+];
 
 export const demoComments = [
   {

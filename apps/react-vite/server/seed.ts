@@ -23,10 +23,6 @@ export async function isDemoSeedPresent(): Promise<boolean> {
 }
 
 export async function seedDemoData(): Promise<void> {
-  if (await isDemoSeedPresent()) {
-    return;
-  }
-
   const hashedPassword = hash(DEMO_PASSWORD);
   const teams = getTeamsCollection();
   const users = getUsersCollection();
