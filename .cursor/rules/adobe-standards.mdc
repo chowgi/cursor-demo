@@ -36,3 +36,4 @@ Enterprise engineering governance for this team. Follow these directives on ever
 
 - No `console.log` or `print` statements in committed code.
 - All environment-specific config must come from environment variables, never hardcoded.
+- Before opening a PR, run the `de-slop` skill to remove AI-generated cruft — redundant comments, generic TODOs, excessive docstrings, and ephemeral scratch files.
