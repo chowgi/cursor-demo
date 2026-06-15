@@ -60,7 +60,7 @@ async function runDemoFlow(recordVideoDir?: string): Promise<void> {
     throw new Error(`Expected exactly 1 matching row, found ${await rows.count()}`);
   }
 
-  await page.waitForTimeout(3500);
+  await page.waitForTimeout(5000);
 
   if (recordVideoDir) {
     const video = page.video();
