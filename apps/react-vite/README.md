@@ -34,12 +34,12 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 When `ENABLE_DEMO_SEEDING=true` (default in `.env.example`), the API is pre-populated with a demo team, users, discussions, and comments on server startup.
 
-| Role  | Email          | Password     |
-| ----- | -------------- | ------------ |
-| Admin | admin@demo.com | password123  |
-| User  | jane@demo.com  | password123  |
-| User  | alex@demo.com  | password123  |
-| User  | sam@demo.com   | password123  |
+| Role  | Email          | Password    |
+| ----- | -------------- | ----------- |
+| Admin | admin@demo.com | password123 |
+| User  | jane@demo.com  | password123 |
+| User  | alex@demo.com  | password123 |
+| User  | sam@demo.com   | password123 |
 
 Log in with any account above to explore pre-filled team data.
 

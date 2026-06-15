@@ -26,6 +26,7 @@ yarn search:create-index
 ```
 
 This will create the Atlas Search index with the following configuration:
+
 - **Index name**: `discussions_search`
 - **Fields**:
   - `title`: autocomplete field for typeahead search
@@ -87,12 +88,14 @@ The `title` field uses **multi-type indexing** per MongoDB docs: `string` for fu
 Once the index is ready, test the search. Cloud agents: use the **start-demo** skill (both servers required).
 
 1. Start the API and frontend:
+
    ```bash
    yarn dev:server   # :8080
    yarn dev          # :3000
    ```
 
 2. Make a search request (API only):
+
    ```bash
    curl 'http://localhost:8080/api/discussions?q=design' \
      -H 'Cookie: token=YOUR_TOKEN'
@@ -179,8 +182,8 @@ The search state is managed via URL query parameters:
 
 ```typescript
 // URL: /app/discussions?q=design&page=1
-const searchQuery = searchParams.get('q')
-const { data } = useDiscussions({ q: searchQuery, page })
+const searchQuery = searchParams.get('q');
+const { data } = useDiscussions({ q: searchQuery, page });
 ```
 
 ### Features
@@ -208,11 +211,13 @@ const { data } = useDiscussions({ q: searchQuery, page })
 ### "Search returns no results"
 
 **Possible causes**:
+
 1. No discussions contain the search term
 2. Discussions belong to a different team
 3. Index is not fully built yet
 
 **Solutions**:
+
 - Try a different search term (e.g., "discussion", "design", "api")
 - Verify you're logged in and have discussions in your team
 - Run `yarn search:check-index` to verify index status
@@ -232,6 +237,7 @@ The search functionality includes:
 - **Type checking**: TypeScript ensures type safety
 
 Run tests:
+
 ```bash
 yarn check-types
 yarn test --run
