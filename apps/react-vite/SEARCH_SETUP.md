@@ -104,14 +104,35 @@ Once the index is ready, test the search. Cloud agents: use the **start-demo** s
    - Type a search query in the search box (e.g. `onboard` or `design`)
    - Confirm autocomplete suggestions and filtered results
 
+## User-Facing Behavior
+
+The discussions page stores search state in the URL so results can be shared or refreshed:
+
+```text
+/app/discussions?q=design&page=1
+```
+
+- Typing at least 2 trimmed characters opens the autocomplete dropdown.
+- Suggestions are fetched after a 200 ms debounce and return up to 5 team-scoped discussions.
+- Pressing Enter searches for the typed value, or the highlighted suggestion if one is selected.
+- Clicking a suggestion searches for that discussion title; it does not navigate directly to the discussion.
+- The Clear action removes both `q` and `page` from the URL.
+- Search results are scoped to the signed-in user's team and paginated at 10 discussions per page.
+
 ## How Search Works
 
 ### Backend (Express/MongoDB)
 
-The `GET /discussions` endpoint accepts an optional `q` query parameter:
+The authenticated `GET /discussions` endpoint supports list search and autocomplete suggestions:
 
-```typescript
-GET /discussions?q=design&page=1
+```bash
+# Filtered discussions list
+curl 'http://localhost:8080/api/discussions?q=design&page=1' \
+  -H 'Cookie: token=YOUR_TOKEN'
+
+# Autocomplete suggestions
+curl 'http://localhost:8080/api/discussions?suggestions=true&q=des' \
+  -H 'Cookie: token=YOUR_TOKEN'
 ```
 
 When a search query is provided, it uses MongoDB's `$search` aggregation stage. Pipelines live in `server/search/discussions-search-pipelines.ts`:
@@ -166,7 +187,7 @@ const { data } = useDiscussions({ q: searchQuery, page })
 
 - **Autocomplete**: Prefix and text match on title (and body for suggestions) as you type
 - **Fuzzy matching (planned, BEN-11)**: Typo tolerance (e.g. `desgn` → "design") requires `fuzzy: { maxEdits: 1 }` on the `autocomplete` and `text` operators in the search pipelines — not yet implemented
-- **Regex fallback**: Substring match when Atlas Search returns no hits; does **not** tolerate typos
+- **Regex fallback**: Substring match when Atlas Search succeeds but returns no hits; does **not** tolerate typos and is not a substitute for `$search` support
 - **Team scoping**: Only shows discussions from your team
 - **Pagination**: Results are paginated (10 per page)
 
@@ -198,9 +219,9 @@ const { data } = useDiscussions({ q: searchQuery, page })
 
 ### "Server error when searching"
 
-**Cause**: MongoDB Atlas Search is not available on local MongoDB or Community Edition.
+**Cause**: MongoDB Atlas Search is not available on local MongoDB or Community Edition, or the `discussions_search` index is missing.
 
-**Solution**: Ensure you're connecting to a MongoDB Atlas cluster (M0 or higher).
+**Solution**: Ensure you're connecting to a MongoDB Atlas cluster (M0 or higher), then run `yarn search:check-index` and create the index if needed.
 
 ## Testing
 
@@ -223,8 +244,8 @@ Requires `MONGODB_URI` in `.env` (same Atlas cluster as dev).
 Search behavior by environment:
 
 - ✅ **MongoDB Atlas** (M0+): Full Atlas Search autocomplete and text search; fuzzy matching after BEN-11 pipeline work
-- ✅ **Vitest / E2E**: Real Atlas via `MONGODB_URI`; regex fallback when `$search` returns empty
-- ⚠️ **Local MongoDB** (non-Atlas): Regex fallback only — no autocomplete index
-- ❌ **MongoDB Community Server without `$search`**: Same as local — fallback regex matching
+- ✅ **Vitest / E2E**: Real MongoDB via `MONGODB_URI`; search specs require Atlas Search support and the `discussions_search` index
+- ⚠️ **Local MongoDB** (non-Atlas): Basic CRUD and unfiltered discussion lists can work, but `q` search and `suggestions=true` requests fail because `$search` is unsupported
+- ❌ **MongoDB Community Server without `$search`**: Not supported for the Atlas Search workflow
 
-For local development without Atlas, the app works with substring/regex search fallback until an Atlas Search index is configured.
+The regex fallback only runs after an Atlas `$search` query completes with zero hits. It covers newly created or not-yet-indexed discussions; it does not catch unsupported `$search` errors.

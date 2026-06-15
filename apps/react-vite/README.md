@@ -6,7 +6,7 @@ Prerequisites:
 
 - Node 20+
 - Yarn 1.22+
-- MongoDB Atlas cluster (or local MongoDB) with `MONGODB_URI` set in `.env`
+- MongoDB via `MONGODB_URI` in `.env` (use Atlas for discussion search/autocomplete)
 
 To set up the app execute the following commands.
 
@@ -43,6 +43,8 @@ When `ENABLE_DEMO_SEEDING=true` (default in `.env.example`), the API is pre-popu
 
 Log in with any account above to explore pre-filled team data.
 
+Discussion search and autocomplete require a MongoDB Atlas Search index. See [Search Setup](./SEARCH_SETUP.md) for index creation, behavior, and troubleshooting.
+
 ### Reset demo data
 
 Drop the `cursor-demo` database in MongoDB (or remove demo collections), then restart `yarn dev:server` to re-seed.
@@ -56,5 +58,5 @@ See the section about [deployment](https://vitejs.dev/guide/static-deploy) for m
 
 ## Testing
 
-- **Unit / integration tests:** `yarn test` — uses an in-memory MongoDB instance and the real Express API.
-- **E2E tests:** `yarn test-e2e` — Playwright starts an ephemeral MongoDB API plus the Vite dev server automatically.
+- **Unit / integration tests:** `yarn test` — requires `MONGODB_URI` and runs the real Express API. Test helpers seed data directly into MongoDB.
+- **E2E tests:** `yarn test-e2e` — requires `MONGODB_URI`; Playwright starts the API server and Vite dev server automatically.

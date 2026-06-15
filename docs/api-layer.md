@@ -19,5 +19,6 @@ Every API request declaration should consist of:
 
 This approach simplifies the tracking of defined endpoints available in the application. Additionally, typing the responses and inferring them further down the application enhances application type safety.
 
-[API Request Declarations - Query - Example Code](../apps/react-vite/src/features/discussions/api/get-discussions.ts)
-[API Request Declarations - Mutation - Example Code](../apps/react-vite/src/features/discussions/api/create-discussion.ts)
+- [API Request Declarations - Query - Example Code](../apps/react-vite/src/features/discussions/api/get-discussions.ts)
+- [API Request Declarations - Suggestions Query - Example Code](../apps/react-vite/src/features/discussions/api/get-discussion-suggestions.ts)
+- [API Request Declarations - Mutation - Example Code](../apps/react-vite/src/features/discussions/api/create-discussion.ts)
