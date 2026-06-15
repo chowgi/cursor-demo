@@ -61,7 +61,7 @@ discussionsRouter.get('/discussions', async (req, res) => {
       }
 
       res.json({
-        data: result.map(serializeDiscussionRead),
+        data: (result as DiscussionDocument[]).map(serializeDiscussionRead),
       });
       return;
     }

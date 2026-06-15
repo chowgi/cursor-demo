@@ -135,6 +135,9 @@ const initializeUser = async (
   }
 
   if (user) {
+    if (!user.email || !user.password) {
+      throw new Error('renderApp user override requires email and password');
+    }
     return loginAsUser({ email: user.email, password: user.password });
   }
 
