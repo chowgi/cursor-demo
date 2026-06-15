@@ -1,3 +1,4 @@
+import { DISCUSSIONS_SEARCH_FUZZY_OPTIONS } from './discussions-search-config';
 import { DISCUSSIONS_SEARCH_INDEX_NAME } from './discussions-search-index';
 
 const SUGGESTION_LIMIT = 5;
@@ -40,12 +41,14 @@ export const buildDiscussionSuggestionsPipeline = ({
               query: searchQuery,
               path: 'title',
               tokenOrder: 'any',
+              fuzzy: DISCUSSIONS_SEARCH_FUZZY_OPTIONS,
             },
           },
           {
             text: {
               query: searchQuery,
               path: ['title', 'body'],
+              fuzzy: DISCUSSIONS_SEARCH_FUZZY_OPTIONS,
             },
           },
         ],
@@ -81,12 +84,14 @@ export const buildDiscussionSearchPipeline = ({
               query: searchQuery,
               path: 'title',
               tokenOrder: 'any',
+              fuzzy: DISCUSSIONS_SEARCH_FUZZY_OPTIONS,
             },
           },
           {
             text: {
               query: searchQuery,
               path: 'body',
+              fuzzy: DISCUSSIONS_SEARCH_FUZZY_OPTIONS,
             },
           },
         ],
