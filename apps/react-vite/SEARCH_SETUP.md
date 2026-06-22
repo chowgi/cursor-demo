@@ -150,7 +150,7 @@ When a search query is provided, it uses MongoDB's `$search` aggregation stage. 
 }
 ```
 
-If Atlas Search returns no hits, the API falls back to case-insensitive regex substring matching via `server/search/discussions-search-fallback.ts`.
+If Atlas Search runs successfully but returns no hits, the API falls back to case-insensitive regex substring matching via `server/search/discussions-search-fallback.ts`. The fallback does not replace Atlas Search on MongoDB deployments that do not support the `$search` stage.
 
 ### Frontend (React/React Query)
 
@@ -166,7 +166,7 @@ const { data } = useDiscussions({ q: searchQuery, page })
 
 - **Autocomplete**: Prefix and text match on title (and body for suggestions) as you type
 - **Fuzzy matching (planned, BEN-11)**: Typo tolerance (e.g. `desgn` → "design") requires `fuzzy: { maxEdits: 1 }` on the `autocomplete` and `text` operators in the search pipelines — not yet implemented
-- **Regex fallback**: Substring match when Atlas Search returns no hits; does **not** tolerate typos
+- **Regex fallback**: Substring match after a successful Atlas Search query returns no hits; does **not** tolerate typos and does not run when `$search` is unsupported
 - **Team scoping**: Only shows discussions from your team
 - **Pagination**: Results are paginated (10 per page)
 
@@ -224,7 +224,7 @@ Search behavior by environment:
 
 - ✅ **MongoDB Atlas** (M0+): Full Atlas Search autocomplete and text search; fuzzy matching after BEN-11 pipeline work
 - ✅ **Vitest / E2E**: Real Atlas via `MONGODB_URI`; regex fallback when `$search` returns empty
-- ⚠️ **Local MongoDB** (non-Atlas): Regex fallback only — no autocomplete index
-- ❌ **MongoDB Community Server without `$search`**: Same as local — fallback regex matching
+- ⚠️ **Local MongoDB** (non-Atlas): Basic app flows can work, but discussions search requests return a server error because `$search` is unavailable
+- ❌ **MongoDB Community Server without `$search`**: Search requests fail before regex fallback can run
 
-For local development without Atlas, the app works with substring/regex search fallback until an Atlas Search index is configured.
+For local development without Atlas, use non-search workflows or point `MONGODB_URI` at Atlas before testing discussions search.

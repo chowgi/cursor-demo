@@ -57,3 +57,22 @@ The react-vite app uses a real Express + MongoDB API for development, testing, a
 [Server App Factory Example Code](../apps/react-vite/server/app.ts)
 
 Having a real API server means tests exercise the same routes, auth cookies, and serialization logic as production rather than a parallel mock implementation.
+
+## React Vite Test Runbook
+
+Before running tests in `apps/react-vite`, copy `.env.example` to `.env` and set `MONGODB_URI`. The test stack uses the configured MongoDB deployment; it does not start an in-memory database.
+
+Recommended checks:
+
+```bash
+cd apps/react-vite
+yarn check-types
+yarn test --run
+yarn test-e2e
+```
+
+- `yarn test` loads `src/testing/setup-tests.ts`, starts the Express API on port `8081` through `src/testing/test-server.ts`, sets `ENABLE_DEMO_SEEDING=false`, and lets test utilities seed users, teams, and discussions directly.
+- `yarn test-e2e` uses Playwright `webServer` entries in `playwright.config.ts` to start `scripts/e2e-api-server.ts` on port `8080` and Vite on port `3000`.
+- The discussions search E2E project logs in as `admin@demo.com`, so keep `ENABLE_DEMO_SEEDING=true` when running the full Playwright suite.
+- Search tests and demos require Atlas Search. Run `yarn search:check-index` to confirm the `discussions_search` index is ready before relying on autocomplete behavior.
+- If using a shared cluster, point `DATABASE_NAME` at a disposable database to avoid mixing local test data with another developer's data.
