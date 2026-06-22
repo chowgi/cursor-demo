@@ -56,5 +56,11 @@ See the section about [deployment](https://vitejs.dev/guide/static-deploy) for m
 
 ## Testing
 
-- **Unit / integration tests:** `yarn test` — uses an in-memory MongoDB instance and the real Express API.
-- **E2E tests:** `yarn test-e2e` — Playwright starts an ephemeral MongoDB API plus the Vite dev server automatically.
+Tests use the same Express API and MongoDB collections as the running app.
+Set `MONGODB_URI` in `.env` before running them.
+
+- **Unit / integration tests:** `yarn test` — Vitest starts the API on port `8081` via `src/testing/test-server.ts`, disables demo seeding, and seeds test data directly through helpers.
+- **E2E tests:** `yarn test-e2e` — Playwright starts the API on port `8080` via `scripts/e2e-api-server.ts` plus the Vite dev server automatically.
+- **Search coverage:** run `yarn search:check-index` first when testing discussions search. The search specs expect an Atlas cluster with the `discussions_search` index and seeded demo data (`ENABLE_DEMO_SEEDING=true`, the default in `.env.example`).
+
+Use a disposable database or override `DATABASE_NAME` when pointing tests at a shared MongoDB cluster.
