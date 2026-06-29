@@ -6,7 +6,7 @@ Prerequisites:
 
 - Node 20+
 - Yarn 1.22+
-- MongoDB Atlas cluster (or local MongoDB) with `MONGODB_URI` set in `.env`
+- MongoDB Atlas cluster with `MONGODB_URI` set in `.env` for the full demo, search, and test suite. A local MongoDB instance can run the API, but Atlas Search features require Atlas.
 
 To set up the app execute the following commands.
 
@@ -25,6 +25,15 @@ yarn dev:server   # MongoDB API on http://localhost:8080/api
 yarn dev          # Vite app on http://localhost:3000
 ```
 
+The API reads server-side configuration from `.env`:
+
+| Variable              | Default                 | Purpose                                                |
+| --------------------- | ----------------------- | ------------------------------------------------------ |
+| `MONGODB_URI`         | none                    | Required MongoDB connection string                     |
+| `APP_URL`             | `http://localhost:3000` | Allowed frontend origin for CORS                       |
+| `APP_MOCK_API_PORT`   | `8080`                  | Express API port for dev and E2E runs                  |
+| `ENABLE_DEMO_SEEDING` | `true`                  | Seeds demo team data when running `yarn dev:server`    |
+
 ##### `yarn dev`
 
 Runs the app in development mode.\
@@ -32,7 +41,7 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 ## Demo Accounts
 
-When `ENABLE_DEMO_SEEDING=true` (default in `.env.example`), the API is pre-populated with a demo team, users, discussions, and comments on server startup.
+When `ENABLE_DEMO_SEEDING=true` (default in `.env.example`), `yarn dev:server` upserts a demo team, users, 100 discussions, and comments on server startup.
 
 | Role  | Email          | Password     |
 | ----- | -------------- | ------------ |
@@ -43,9 +52,19 @@ When `ENABLE_DEMO_SEEDING=true` (default in `.env.example`), the API is pre-popu
 
 Log in with any account above to explore pre-filled team data.
 
+The first five discussions are stable fixtures for demos and search verification:
+
+- `Improving new member onboarding`
+- `Design review for dashboard refresh`
+- `API versioning strategy`
+- `Release checklist for v1.2`
+- `Sprint retrospective notes`
+
+Generated filler discussions avoid those fixture keywords so searches like `onboard`, `design`, `dashboard`, `api`, and `release` resolve to the expected rows. For Atlas Search index setup and limitations, see [SEARCH_SETUP.md](./SEARCH_SETUP.md).
+
 ### Reset demo data
 
-Drop the `cursor-demo` database in MongoDB (or remove demo collections), then restart `yarn dev:server` to re-seed.
+Drop the `cursor-demo` database in MongoDB (or remove demo collections), then restart `yarn dev:server` to re-seed. The seed script uses fixed document IDs and upserts, so restarting the dev server refreshes known fixtures without deleting unrelated data.
 
 ##### `yarn build`
 
@@ -56,5 +75,6 @@ See the section about [deployment](https://vitejs.dev/guide/static-deploy) for m
 
 ## Testing
 
-- **Unit / integration tests:** `yarn test` — uses an in-memory MongoDB instance and the real Express API.
-- **E2E tests:** `yarn test-e2e` — Playwright starts an ephemeral MongoDB API plus the Vite dev server automatically.
+- **Unit / integration tests:** `yarn test` — starts the real Express API on port 8081 through `src/testing/test-server.ts` and uses `MONGODB_URI`. Demo seeding is disabled; tests create their own users, teams, and discussions.
+- **E2E tests:** `yarn test-e2e` — Playwright starts the Express API on port 8080 via `scripts/e2e-api-server.ts` plus the Vite dev server on port 3000. These tests use the configured MongoDB database, not an in-memory or ephemeral database.
+- **Search recording project:** the `discussions-search-recording` Playwright project logs in as `admin@demo.com`, so the target database must already contain the demo seed data and a ready Atlas Search index.
